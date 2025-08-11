@@ -1,0 +1,16 @@
+# code: language=ansible
+---
+- name: Setup computer
+  hosts: all
+
+  vars:
+
+  tasks:
+    - name: Debug all variables in current scope
+      ansible.builtin.debug:
+        var: hostvars[inventory_hostname]
+      tags:
+        - never
+        - debug_info
+
+  roles:

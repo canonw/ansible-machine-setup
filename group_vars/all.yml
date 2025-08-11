@@ -1,0 +1,11 @@
+# code: language=ansible
+---
+file_bash_profile: "{{ ansible_env.HOME }}/.bash_profile"
+file_bashrc: "{{ ansible_env.HOME }}/.bashrc"
+file_zshrc: "{{ ansible_env.HOME }}/.zshrc"
+file_zprofile: "{{ ansible_env.HOME }}/.zprofile"
+
+# is_mac: "{{ ansible_os_family == 'Darwin' }}"
+is_mac: "{{ ansible_distribution == 'MacOSX' }}"
+
+my_config_dir: "{{ ansible_env.HOME }}/.kw_config/"
