@@ -1,0 +1,17 @@
+# code: language=ansible
+---
+vscode_extensions:
+  - { name: "davidanson.vscode-markdownlint" }
+  - { name: "editorconfig.editorconfig" }
+  - { name: "github.copilot" }
+  - { name: "github.copilot-chat" }
+  - { name: "gxl.git-graph-3" }
+  - { name: "ms-python.debugpy" }
+  - { name: "ms-python.python" }
+  - { name: "ms-python.vscode-pylance" }
+  - { name: "ms-python.vscode-python-envs" }
+  - { name: "redhat.ansible" }
+  - { name: "redhat.vscode-yaml" }
+  - { name: "streetsidesoftware.code-spell-checker" }
+  - { name: "timonwong.shellcheck" }
+
