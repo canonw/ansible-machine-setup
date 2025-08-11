@@ -17,9 +17,4 @@
     - role: macos
       when: is_mac
 
-    - fzf
-    - zoxide
-
-    - fastfetch
-
     - vscode
