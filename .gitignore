@@ -45,3 +45,6 @@ tags
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/ansible,visualstudiocode,vim
+
+## My custom settings
+.ansible/*
