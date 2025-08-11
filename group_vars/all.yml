@@ -1,0 +1,18 @@
+# code: language=ansible
+---
+# file_bash_profile: "{{ ansible_env.HOME }}/.bash_profile" # Defined in vars path
+file_bashrc: "{{ ansible_env.HOME }}/.bashrc"
+file_zshrc: "{{ ansible_env.HOME }}/.zshrc"
+file_zprofile: "{{ ansible_env.HOME }}/.zprofile"
+
+# is_mac: "{{ ansible_os_family == 'Darwin' }}"
+is_mac: "{{ ansible_distribution == 'MacOSX' }}"
+is_ubuntu: "{{ ansible_distribution == 'Ubuntu' }}"
+
+is_wsl: "{{ 'WSL2' in ansible_kernel }}" # Value is based on "6.6.87.2-microsoft-standard-WSL2"
+
+my_config_subpath: "/.kw_config"
+# my_config_dir: "{{ ansible_env.HOME }}{{ my_config_subpath }}/"
+my_config_dir: "$HOME{{ my_config_subpath }}/"
+my_custom_bash_aliases_file: "$HOME{{ my_config_subpath }}/.bash_aliases"
+my_custom_zsh_aliases_file: "$HOME{{ my_config_subpath }}/.zsh_aliases"
