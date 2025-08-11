@@ -31,3 +31,6 @@
 
   roles:
     - role: os-bootstrap
+
+    - role: vscode
+      when: not is_wsl

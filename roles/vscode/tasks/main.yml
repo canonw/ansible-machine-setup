@@ -1,0 +1,33 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "vscode"
+  block:
+    # TODO Update each OS path
+    # Windows: %APPDATA%\Code\User\settings.json
+    # macOS: $HOME/Library/Application Support/Code/User/settings.json
+    # Linux: $HOME/.config/Code/User/settings.json
+    - name: Define application directory
+      ansible.builtin.set_fact:
+        vscode_user_settings_dir: "{{ ansible_env.HOME }}/Library/Application Support/Code/User/"
+      when: is_mac
+
+    - name: Update user settings.json
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/files/vscode/settings.json"
+        dest: "{{ vscode_user_settings_dir }}"
+        backup: true
+        directory_mode: "755"
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+      when: vscode_user_settings_dir is defined
+
+    - name: Install extensions
+      ansible.builtin.command:
+        cmd: code --install-extension {{ item.name }}
+      register: vscode_extensions_output
+      changed_when: "'was successfully installed' in vscode_extensions_output.stdout"
+      loop: "{{ vscode_extensions }}"
+      when: vscode_user_settings_dir is defined
