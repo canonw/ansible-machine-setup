@@ -1,0 +1,92 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "zsh"
+  block:
+    - name: "Install {{ app }}"
+      when: not is_mac # Handle MacOSX in brew bundle
+      become: true
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - {name: "zsh"}
+
+    - name: Ensure .zshrc exists
+      ansible.builtin.file:
+        path: "{{ file_zshrc }}"
+        state: touch
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+        modification_time: preserve
+        access_time: preserve
+
+    - name: Ensure .zprofile exists
+      ansible.builtin.file:
+        path: "{{ file_zprofile }}"
+        state: touch
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+        modification_time: preserve
+        access_time: preserve
+
+- name: Setup Oh My Zsh
+  vars:
+    app: "oh_my_zsh"
+  block:
+    - name: Include Oh My Zsh task in play
+      ansible.builtin.include_tasks:
+        file: "oh_my_zsh.yml"
+
+- name: Setup aliases
+  vars:
+    app: "zsh_aliases"
+    custom_aliases_file: "{{ my_custom_zsh_aliases_file }}"
+  block:
+    - name: Ensure custom configuration directory exists
+      ansible.builtin.file:
+        path: "{{ my_config_dir }}"
+        state: directory
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0755"
+        modification_time: preserve
+        access_time: preserve
+
+    - name: Ensure custom aliases file exists
+      ansible.builtin.file:
+        path: "{{ custom_aliases_file }}"
+        state: touch
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+        modification_time: preserve
+        access_time: preserve
+
+    - name: Update custom aliases
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        path: "{{ custom_aliases_file }}"
+        backup: true
+        block: "{{ lookup('ansible.builtin.file', '{{ playbook_dir }}/files/.zsh_aliases') }}"
+        prepend_newline: true
+
+    - name: Configure custom alias file to {{ file_zshrc }}
+      ansible.builtin.lineinfile:
+        path: "{{ file_zshrc }}"
+        line: "[ -f \"{{ custom_aliases_file }}\" ] && source \"{{ custom_aliases_file }}\""
+        create: true
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+
+- name: Setup OS specific settings
+  block:
+    - name: Include OS task in play (Mac)
+      ansible.builtin.include_tasks:
+        file: "osx.yml"
+      when: is_mac

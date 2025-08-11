@@ -3,7 +3,8 @@
 Setup local computer configuration
 
 1. Bash configuration
-2. Various command line
+2. ZSH configuration
+3. Various command line
 
 It supports the following OS
 

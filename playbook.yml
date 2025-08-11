@@ -33,6 +33,7 @@
     - role: os-bootstrap
 
     - bash
+    - zsh
 
     - role: vscode
       when: not is_wsl
