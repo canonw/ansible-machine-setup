@@ -1,0 +1,57 @@
+# code: language=ansible
+---
+- name: Ensure .zshrc exists
+  ansible.builtin.file:
+    path: "{{ file_zshrc }}"
+    state: touch
+    owner: "{{ ansible_user_uid }}"
+    group: "{{ ansible_user_gid }}"
+    mode: "0644"
+    modification_time: preserve
+    access_time: preserve
+
+- name: Ensure .zprofile exists
+  ansible.builtin.file:
+    path: "{{ file_zprofile }}"
+    state: touch
+    owner: "{{ ansible_user_uid }}"
+    group: "{{ ansible_user_gid }}"
+    mode: "0644"
+    modification_time: preserve
+    access_time: preserve
+
+- name: Ensure custom configuration directory exists
+  ansible.builtin.file:
+    path: "{{ my_config_dir }}"
+    state: directory
+    owner: "{{ ansible_user_uid }}"
+    group: "{{ ansible_user_gid }}"
+    mode: "0755"
+    modification_time: preserve
+    access_time: preserve
+
+- name: Copy custom alias file
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/files/.zsh_aliases"
+    dest: "{{ my_config_dir }}/.zsh_aliases"
+    owner: "{{ ansible_user_uid }}"
+    group: "{{ ansible_user_gid }}"
+    mode: "0644"
+
+- name: Include custom alias file to .zshrc
+  ansible.builtin.lineinfile:
+    path: "{{ file_zshrc }}"
+    line: "[ -f {{ my_config_dir }}/.zsh_aliases ] && source {{ my_config_dir }}/.zsh_aliases"
+    create: true
+    owner: "{{ ansible_user_uid }}"
+    group: "{{ ansible_user_gid }}"
+    mode: "0644"
+
+- name: Include OS task in play (Mac)
+  ansible.builtin.include_tasks:
+    file: "osx.yml"
+  when: is_mac
+
+- name: Include Oh My Zsh task in play
+  ansible.builtin.include_tasks:
+    file: "oh_my_zsh.yml"

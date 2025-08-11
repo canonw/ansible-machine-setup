@@ -18,5 +18,6 @@
       when: is_mac
 
     - bash
+    - zsh
 
     - vscode
