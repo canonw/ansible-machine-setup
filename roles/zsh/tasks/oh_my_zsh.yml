@@ -1,0 +1,197 @@
+# code: language=ansible
+---
+- name: Setup Oh My Zsh
+  vars:
+    app: "oh-my-zsh"
+  block:
+    - name: Check if Oh My Zsh is already installed
+      ansible.builtin.stat:
+        path: "{{ ansible_env.HOME }}/.oh-my-zsh"
+      register: zsh_oh_my_zsh_dir
+
+    - name: Download Oh My Zsh installation script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+        dest: /tmp/install_ohmyzsh.sh
+        mode: "0777"
+      when: not zsh_oh_my_zsh_dir.stat.exists
+
+    # Override default install, which change .zshrc
+    - name: Install Oh My Zsh
+      ansible.builtin.command:
+        cmd: sh /tmp/install_ohmyzsh.sh --unattended --keep-zshrc
+      register: zsh_oh_my_zsh_output
+      changed_when: "'Run zsh to try it out.' in zsh_oh_my_zsh_output.stdout" # Indicates changes if successful
+      when: not zsh_oh_my_zsh_dir.stat.exists
+
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail # <-- adding this will prevent surprises
+          figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: zsh_ohmyzsh_block_header_result
+      changed_when: zsh_ohmyzsh_block_header_result.rc != 0
+
+    - name: Update Oh My Zsh to .zshrc
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - ohmyzsh"
+        path: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          {{ zsh_ohmyzsh_block_header_result.stdout }}
+          {{ lookup('ansible.builtin.file', 'files/ohmyzsh.zshrc') }}
+        prepend_newline: true
+
+    - name: Determine ZSH_CUSTOM plugin variable
+      ansible.builtin.set_fact:
+        zsh_custom_plugins_dir: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/plugins"
+
+    - name: Debug role variables
+      ansible.builtin.debug:
+        var: "zsh_custom_plugins_dir"
+      tags:
+        - never
+        - debug_info
+
+    - name: Install zsh-autosuggestions plugin
+      ansible.builtin.git:
+        repo: https://github.com/zsh-users/zsh-autosuggestions
+        dest: "{{ zsh_custom_plugins_dir }}/zsh-autosuggestions"
+        depth: 1
+        version: master
+
+    # Reference: https://github.com/zsh-users/zsh-autosuggestions
+    - name: Update zsh-autosuggestions configuration to .zshrc
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - zsh-autosuggestions"
+        state: present
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          #source $ZSH_CUSTOM/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+          #ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#ff00ff,bg=cyan,bold,underline"
+
+          bindkey '^ ' autosuggest-accept
+        prepend_newline: true
+
+    # Reference: https://github.com/zsh-users/zsh-completions
+    - name: Install zsh-completions plugin
+      ansible.builtin.git:
+        repo: https://github.com/zsh-users/zsh-completions.git
+        dest: "{{ zsh_custom_plugins_dir }}/zsh-completions"
+        depth: 1
+        version: master
+
+    # Reference: https://github.com/zsh-users/zsh-syntax-highlighting
+    - name: Install zsh-syntax-highlighting plugin
+      ansible.builtin.git:
+        repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+        dest: "{{ zsh_custom_plugins_dir }}/zsh-syntax-highlighting"
+        depth: 1
+        version: master
+
+    - name: Install zsh-history-substring-search plugin
+      ansible.builtin.git:
+        repo: https://github.com/zsh-users/zsh-history-substring-search.git
+        dest: "{{ zsh_custom_plugins_dir }}/zsh-history-substring-search"
+        depth: 1
+        version: master
+
+    # Reference: https://github.com/zsh-users/zsh-history-substring-search
+    - name: Update zsh-history-substring-search to .zshrc
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - zsh-history-substring-search"
+        state: present
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          # source $ZSH_CUSTOM/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
+
+          bindkey "$terminfo[kcuu1]" history-substring-search-up
+          bindkey "$terminfo[kcud1]" history-substring-search-down
+        prepend_newline: true
+
+    - name: Install zsh-you-should-use plugin
+      ansible.builtin.git:
+        repo: https://github.com/MichaelAquilina/zsh-you-should-use.git
+        dest: "{{ zsh_custom_plugins_dir }}/zsh-you-should-use"
+        depth: 1
+        version: master
+
+# Must execute after Oh My Zsh.
+# The whole block of setup is converted from manual setup.
+# https://github.com/romkatv/powerlevel10k
+- name: Setup Powerlevel10k
+  vars:
+    app: "powerlevel10k"
+    powerlevel10k_post_code_block:
+      MacOSX: |
+        source $HOMEBREW_PREFIX/share/powerlevel10k/powerlevel10k.zsh-theme
+
+        # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+        [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+      Ubuntu: |
+        source "$ZSH_CUSTOM/themes/powerlevel10k/powerlevel10k.zsh-theme"
+
+        # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+        [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+  block:
+    - name: Determine ZSH_CUSTOM theme variable
+      ansible.builtin.set_fact:
+        zsh_custom_themes_dir: "{{ lookup('env', 'HOME') }}/.oh-my-zsh/custom/themes"
+
+    - name: Install {{ app }}
+      ansible.builtin.git:
+        repo: https://github.com/romkatv/powerlevel10k.git
+        dest: "{{ zsh_custom_themes_dir }}/powerlevel10k"
+        depth: 1
+        version: master
+
+    # p10k.zsh is generated by `p10k configure`.  This task skip repeating the step.
+    - name: Copy configuration file
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/files/p10k.zsh"
+        dest: "{{ ansible_env.HOME }}/.p10k.zsh"
+        force: false
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail # <-- adding this will prevent surprises
+          figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: zsh_powerlevel10k_block_header_result
+      changed_when: zsh_powerlevel10k_block_header_result.rc != 0
+
+    - name: Configure 1 of 2 {{ file_zshrc }}
+      ansible.builtin.blockinfile:
+        state: present
+        insertbefore: BOF
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - Pre {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          {{ zsh_powerlevel10k_block_header_result.stdout }}
+          # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+          # Initialization code that may require console input (password prompts, [y/n]
+          # confirmations, etc.) must go above this block; everything else may go below.
+          if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+            source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+          fi
+        prepend_newline: true
+
+    - name: Configure 2 of 2 {{ file_zshrc }}
+      ansible.builtin.blockinfile:
+        state: present
+        insertafter: "^# END ANSIBLE MANAGED BLOCK - ohmyzsh"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - Post {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          {{ zsh_powerlevel10k_block_header_result.stdout }}
+          {{ powerlevel10k_post_code_block[ansible_distribution] | default('echo "Undefined"') }}
+        prepend_newline: true

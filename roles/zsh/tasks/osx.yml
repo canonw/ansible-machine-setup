@@ -1,0 +1,12 @@
+# code: language=ansible
+---
+- name: Install zsh
+  community.general.homebrew:
+    name: zsh
+    state: present
+
+- name: Add brew zsh to /etc/shells
+  ansible.builtin.lineinfile:
+    path: "/etc/shells"
+    line: "/opt/homebrew/bin/zsh"
+  become: true
