@@ -1,0 +1,25 @@
+# code: language=ansible
+---
+- name: Configure {{ app }}
+  vars:
+    app: "fzf"
+  block:
+    - name: Configure {{ file_zshrc }}
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          test -f "$(command -v fzf)" && source <(fzf --zsh)
+        prepend_newline: true
+        state: present
+
+    - name: Configure {{ file_bashrc }}
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          test -f "$(command -v fzf)" && eval "$(fzf --bash)"
+        prepend_newline: true
+        state: present
