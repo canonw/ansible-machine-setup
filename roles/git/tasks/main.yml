@@ -1,0 +1,13 @@
+# code: language=ansible
+---
+- name: Define global configuration
+  ansible.builtin.shell: |
+    if [ "$(git config --get '{{ item.name }}')" = "{{ item.value }}" ]; then
+      echo "No Change"
+    else
+      git config --global {{ item.name }} "{{ item.value }}"
+      echo "Set"
+    fi
+  loop: "{{ git_global_configs }}"
+  register: git_global_config_output
+  changed_when: "'Set' in git_global_config_output.stdout"

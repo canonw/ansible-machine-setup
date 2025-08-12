@@ -4,6 +4,10 @@
   hosts: all
 
   vars:
+    # Define git repository user
+    git_global_configs:
+      - { name: "user.name", value: "Ken Wong" }
+      - { name: "user.email", value: "canonw@users.noreply.github.com" }
 
   tasks:
     - name: Debug all variables in current scope
@@ -19,6 +23,8 @@
 
     - bash
     - zsh
+
+    - git
 
     - fzf
     - zoxide

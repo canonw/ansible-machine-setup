@@ -1,0 +1,5 @@
+# code: language=ansible
+---
+git_global_configs:
+  - { name: "user.name", value: "TBD" }
+  - { name: "user.email", value: "tbd@email.com" }
