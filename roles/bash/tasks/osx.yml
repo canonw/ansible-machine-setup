@@ -1,0 +1,27 @@
+# code: language=ansible
+---
+- name: Install bash
+  community.general.homebrew:
+    name: bash
+    state: present
+
+- name: Add brew bash to /etc/shells
+  ansible.builtin.lineinfile:
+    path: "/etc/shells"
+    line: "/opt/homebrew/bin/bash"
+  become: true
+
+# Reference https://github.com/scop/bash-completion/blob/main/README.md#macos-os-x
+- name: Configure .bash_profile (Mac)
+  ansible.builtin.blockinfile:
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - macos"
+    dest: "{{ file_bash_profile }}"
+    backup: true
+    block: |
+      if [ "$BASH" ]; then
+        if [[ -f "$HOME/.bashrc" ]]; then
+          source "$HOME/.bashrc"
+        fi
+      fi
+    prepend_newline: true
+    state: present

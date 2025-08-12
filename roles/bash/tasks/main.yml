@@ -1,0 +1,118 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "bash"
+    config_files:
+      - {name: "{{ file_bashrc }}"}
+      - {name: "{{ file_bash_profile }}"}
+  block:
+    - name: "Install {{ app }}"
+      when: not is_mac # Handle MacOSX in brew bundle
+      become: true
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - {name: "bash"}
+
+    - name: Ensure configuration files exist
+      ansible.builtin.file:
+        path: "{{ item.name }}"
+        state: touch
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+        modification_time: preserve
+        access_time: preserve
+      loop: "{{ config_files }}"
+
+- name: Setup aliases
+  vars:
+    app: "bash_aliases"
+    custom_aliases_file: "{{ my_custom_bash_aliases_file }}"
+  block:
+    - name: Ensure custom configuration directory exists
+      ansible.builtin.file:
+        path: "{{ my_config_dir }}"
+        state: directory
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0755"
+        modification_time: preserve
+        access_time: preserve
+
+    - name: Ensure custom aliases file exists
+      ansible.builtin.file:
+        path: "{{ custom_aliases_file }}"
+        state: touch
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+        modification_time: preserve
+        access_time: preserve
+
+    - name: Copy custom alias file (deprecated)
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/files/.bash_aliases"
+        dest: "{{ my_config_dir }}"
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+      tags:
+        - never
+
+    - name: Update custom aliases
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        path: "{{ custom_aliases_file }}"
+        backup: true
+        block: "{{ lookup('ansible.builtin.file', '{{ playbook_dir }}/files/.bash_aliases') }}"
+        prepend_newline: true
+
+    - name: Configure custom alias file to .bashrc
+      ansible.builtin.lineinfile:
+        path: "{{ file_bashrc }}"
+        line: "[ -f \"{{ custom_aliases_file }}\" ] && source \"{{ custom_aliases_file }}\""
+        create: true
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+
+- name: Setup bash_completion
+  vars:
+    app: "bash-completion"
+    # Snippet reference from https://github.com/scop/bash-completion/
+    code_block:
+      MacOSX: |
+        [[ -r "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh" ]] && . "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh"
+      Ubuntu: |
+        [[ -f "/etc/profile.d/bash_completion.sh" ]] && source "/etc/profile.d/bash_completion.sh"
+  block:
+    - name: "Install {{ app }}"
+      when: not is_mac # Handle MacOSX in brew bundle
+      become: true
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - {name: "bash-completion"}
+
+    - name: "Configure {{ app }}"
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          # shellcheck source=/dev/null
+          {{ code_block[ansible_distribution] | default('') }}
+        prepend_newline: true
+
+- name: Setup MacOSX
+  block:
+    - name: Include OS task in play (Mac)
+      ansible.builtin.include_tasks:
+        file: "osx.yml"
+      when: is_mac
