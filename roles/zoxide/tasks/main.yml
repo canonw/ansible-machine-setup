@@ -1,0 +1,28 @@
+# code: language=ansible
+---
+- name: Configure {{ app }}
+  vars:
+    app: "zoxide"
+  block:
+    - name: Configure {{ file_zshrc }}
+      when: not is_mac # brew includes completion setup in Oh My Zsh
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          if (( $+commands[zoxide] )); then
+            eval "$(zoxide init zsh)"
+          fi
+        prepend_newline: true
+        state: present
+
+    - name: Configure {{ file_bashrc }}
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          test -f "$(command -v zoxide)" && eval "$(zoxide init bash)"
+        prepend_newline: true
+        state: present
