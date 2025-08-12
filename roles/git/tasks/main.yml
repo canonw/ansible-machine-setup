@@ -1,0 +1,21 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "git"
+  block:
+    - name: "Install {{ app }}"
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - {name: "git"}
+
+    - name: Configure global git settings
+      community.general.git_config:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        scope: global
+        state: "{{ item.state | default('present') }}"
+      loop: "{{ git_global_configs + git_global_configs_ex }}"
