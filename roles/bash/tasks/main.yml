@@ -1,0 +1,63 @@
+# code: language=ansible
+---
+- name: Ensure .bashrc exists
+  ansible.builtin.file:
+    path: "{{ file_bashrc }}"
+    state: touch
+    owner: "{{ ansible_user_uid }}"
+    group: "{{ ansible_user_gid }}"
+    mode: "0644"
+    modification_time: preserve
+    access_time: preserve
+
+- name: Ensure .bash_profile exists
+  ansible.builtin.file:
+    path: "{{ file_bash_profile }}"
+    state: touch
+    owner: "{{ ansible_user_uid }}"
+    group: "{{ ansible_user_gid }}"
+    mode: "0644"
+    modification_time: preserve
+    access_time: preserve
+
+- name: Ensure custom configuration directory exists
+  ansible.builtin.file:
+    path: "{{ my_config_dir }}"
+    state: directory
+    owner: "{{ ansible_user_uid }}"
+    group: "{{ ansible_user_gid }}"
+    mode: "0755"
+    modification_time: preserve
+    access_time: preserve
+
+- name: Copy custom alias file
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/files/.bash_aliases"
+    dest: "{{ my_config_dir }}"
+    owner: "{{ ansible_user_uid }}"
+    group: "{{ ansible_user_gid }}"
+    mode: "0644"
+
+- name: Include custom alias file to .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ file_bashrc }}"
+    line: "[ -f {{ my_config_dir }}/.bash_aliases ] && source {{ my_config_dir }}/.bash_aliases"
+    create: true
+    owner: "{{ ansible_user_uid }}"
+    group: "{{ ansible_user_gid }}"
+    mode: "0644"
+
+- name: Configure bash completion in .bashrc
+  ansible.builtin.blockinfile:
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - bash-completion"
+    dest: "{{ file_bashrc }}"
+    backup: true
+    block: |
+      [[ -r "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh" ]] && . "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh"
+    prepend_newline: true
+    state: present
+
+- name: Include OS task in play (Mac)
+  ansible.builtin.include_tasks:
+    file: "osx.yml"
+  when: is_mac

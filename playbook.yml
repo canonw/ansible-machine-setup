@@ -17,4 +17,6 @@
     - role: macos
       when: is_mac
 
+    - bash
+
     - vscode
