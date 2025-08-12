@@ -1,0 +1,21 @@
+# code: language=ansible
+---
+- name: Update {{ file_zshrc }}
+  ansible.builtin.blockinfile:
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - fastfetch"
+    dest: "{{ file_zshrc }}"
+    backup: true
+    block: |
+      test -f "$(command -v fastfetch)" && fastfetch
+    prepend_newline: true
+    state: present
+
+- name: Update {{ file_bashrc }}
+  ansible.builtin.blockinfile:
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - fastfetch"
+    dest: "{{ file_bashrc }}"
+    backup: true
+    block: |
+      test -f "$(command -v fastfetch)" && fastfetch
+    prepend_newline: true
+    state: present

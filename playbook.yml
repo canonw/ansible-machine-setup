@@ -23,4 +23,6 @@
     - fzf
     - zoxide
 
+    - fastfetch
+
     - vscode
