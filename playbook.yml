@@ -35,5 +35,7 @@
     - bash
     - zsh
 
+    - fzf
+
     - role: vscode
       when: not is_wsl

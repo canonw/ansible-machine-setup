@@ -1,0 +1,59 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "fzf"
+    bashrc_code_block:
+      MacOSX: |
+        test -f "$(command -v fzf)" && eval "$(fzf --bash)"
+      # TODO: Fix Ubuntu.  Key binding failed
+      # Reference 'apt show fzf'
+      Ubuntu: |
+        [ -x "$(command -v fzf)" ] && source "/usr/share/doc/fzf/examples/key-bindings.bash"
+    zshrc_code_block:
+      MacOSX: |
+        test -f "$(command -v fzf)" && source <(fzf --zsh)
+      # Reference 'apt show fzf'
+      Ubuntu: |
+        [ -x "$(command -v fzf)" ] && source "/usr/share/doc/fzf/examples/completion.zsh"
+        [ -x "$(command -v fzf)" ] && source "/usr/share/doc/fzf/examples/key-bindings.zsh"
+  block:
+    - name: "Install {{ app }}"
+      when: not is_mac # Handle MacOSX in brew bundle
+      become: true
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - {name: "fzf"}
+
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail # <-- adding this will prevent surprises
+          figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: fzf_block_header_result
+      changed_when: fzf_block_header_result.rc != 0
+
+    - name: Configure {{ file_zshrc }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          {{ fzf_block_header_result.stdout }}
+          {{ zshrc_code_block[ansible_distribution] | default('') }}
+        prepend_newline: true
+
+    - name: Configure {{ file_bashrc }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          {{ fzf_block_header_result.stdout }}
+          {{ bashrc_code_block[ansible_distribution] | default('') }}
+        prepend_newline: true
