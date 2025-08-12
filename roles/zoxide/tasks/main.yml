@@ -1,0 +1,47 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "zoxide"
+  block:
+    - name: "Install {{ app }}"
+      when: not is_mac # Handle MacOSX in brew bundle
+      become: true
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - {name: "zoxide"}
+
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail # <-- adding this will prevent surprises
+          figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: zoxide_block_header_result
+      changed_when: zoxide_block_header_result.rc != 0
+
+    - name: Configure {{ file_zshrc }}
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          {{ zoxide_block_header_result.stdout }}
+          if (( $+commands[zoxide] )); then
+            eval "$(zoxide init zsh)"
+          fi
+        prepend_newline: true
+        state: present
+
+    - name: Configure {{ file_bashrc }}
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          {{ zoxide_block_header_result.stdout }}
+          test -f "$(command -v zoxide)" && eval "$(zoxide init bash)"
+        prepend_newline: true
+        state: present
