@@ -1,0 +1,42 @@
+[alias]
+	al-lst = !git config -l | grep alias | sort | cut -c 7-
+	amend = !git log -n 1 --pretty=tformat:%s%n%n%b | git commit -F - --amend
+	br = branch
+	cm = commit -v
+	cm-a = !git add -A && git commit -m
+	cm-aq = !git add -A && git commit -m \"Update from $(echo `uname -a | awk '{print $2}'`) on $(echo `date +%FT%T%Z`)\"
+	co = checkout
+	co-b = checkout -b
+
+	df-s = diff --stat
+	df-c = diff --cached
+
+	dt = difftool -t vscode # Diff with vscode
+	fixup = commit --fixup
+
+	last = log -1 HEAD
+	lg = log --oneline --graph --all --decorate
+	lg-1 = log --pretty=format:\"%C(yellow)%h\\\\ %C(green)%ad%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate --date=short --graph --all --oneline
+	lg-f = log --pretty=format:\"%C(yellow)%h%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate --numstat
+	lg-d = log --pretty=format:\"%C(yellow)%h\\\\ %ad%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate --date=short
+	lg-r = log --pretty=format:\"%C(yellow)%h\\\\ %ad%Cred%d\\\\ %Creset%s%Cblue\\\\ [%cn]\" --decorate --date=relative
+
+	mm = merge --no-ff
+	mt = mergetool -t vscode
+
+	pl = pull
+	pl-r = pull --rebase
+	pr = !gh pr create --fill
+	prc = !gh pr checkout
+	prl = !gh pr list
+
+  	root=rev-parse --show-toplevel
+
+	squash = commit --squash
+
+	st = status
+
+	up = !git fetch origin && git rebase origin/master
+	wipe = "!sh -c \" !git add -A && git commit -qm '$1' && git reset HEAD~1 --hard\" "
+
+	w1 = "!f() { !git add -A && git commit -qm \"$1\" ; };f"

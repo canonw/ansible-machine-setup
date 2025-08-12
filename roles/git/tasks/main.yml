@@ -1,0 +1,45 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "git"
+    file_config: "alias.gitconfig" # custom git config file.
+  block:
+    - name: "Install {{ app }}"
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - { name: "git" }
+        - { name: "git-extras" }
+        - { name: "git-flow" }
+        - { name: "tig" }
+
+    - name: Configure global git settings
+      community.general.git_config:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        scope: global
+        state: "{{ item.state | default('present') }}"
+      loop: "{{ git_global_configs + git_global_configs_ex }}"
+
+    - name: Copy config file
+      ansible.builtin.copy:
+        src: "{{ role_path }}/files/{{ file_config }}"
+        dest: "{{ my_config_dir }}"
+        backup: true
+        directory_mode: "755"
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+
+    - name: Configure .gitconfig
+      community.general.git_config:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        scope: global
+        state: "{{ item.state | default(omit) }}"
+        add_mode: add
+      loop:
+        - { name: "include.path", value: "{{ my_config_dir | replace('$HOME', '~') }}{{ file_config }}" }

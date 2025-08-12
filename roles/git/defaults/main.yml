@@ -1,0 +1,10 @@
+# code: language=ansible
+---
+git_global_configs:
+  - { name: "init.defaultBranch", value: "main" }
+  - { name: "core.editor", value: "nvim" }
+
+  - { name: "difftool.vscode.cmd", value: "code --wait --diff $LOCAL $REMOTE" }
+  - { name: "mergetool.vscode.cmd", value: "code --wait $MERGED" }
+
+git_global_configs_ex:
