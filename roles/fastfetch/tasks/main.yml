@@ -1,0 +1,55 @@
+# code: language=ansible
+---
+# TODO: update to Ubuntu version specific
+- name: Setup PPA repository
+  when: is_ubuntu
+  block:
+    - name: Add PPA repository
+      become: true
+      ansible.builtin.apt_repository:
+        repo: "ppa:zhangsongcui3371/fastfetch"
+        state: present
+
+- name: Setup {{ app }}
+  vars:
+    app: "fastfetch"
+
+  block:
+    - name: "Install {{ app }}"
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - { name: "fastfetch" }
+
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail # <-- adding this will prevent surprises
+          figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: fastfetch_block_header_result
+      changed_when: fastfetch_block_header_result.rc != 0
+
+    - name: Configure {{ file_zprofile }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_zprofile }}"
+        backup: true
+        block: |
+          {{ fastfetch_block_header_result.stdout }}
+          test -f "$(command -v fastfetch)" && fastfetch
+        prepend_newline: true
+
+    - name: Configure {{ file_bash_profile }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bash_profile }}"
+        backup: true
+        block: |
+          {{ fastfetch_block_header_result.stdout }}
+          test -f "$(command -v fastfetch)" && fastfetch
+        prepend_newline: true

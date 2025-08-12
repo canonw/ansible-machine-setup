@@ -38,5 +38,7 @@
     - fzf
     - zoxide
 
+    - fastfetch
+
     - role: vscode
       when: not is_wsl
