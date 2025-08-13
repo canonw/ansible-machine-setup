@@ -1,0 +1,47 @@
+# code: language=ansible
+---
+# Reference: https://learn.microsoft.com/en-us/dotnet/core/tools/enable-tab-autocomplete
+- name: Update {{ file_zshrc }}
+  ansible.builtin.blockinfile:
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - dotnet"
+    dest: "{{ file_zshrc }}"
+    backup: true
+    block: |
+      _dotnet_zsh_complete()
+      {
+        local completions=("$(dotnet complete "$words")")
+
+        # If the completion list is empty, just continue with filename selection
+        if [ -z "$completions" ]
+        then
+          _arguments '*::arguments: _normal'
+          return
+        fi
+
+        # This is not a variable assignment, don't remove spaces!
+        _values = "${(ps:\n:)completions}"
+      }
+
+      compdef _dotnet_zsh_complete dotnet
+    prepend_newline: true
+    state: present
+
+- name: Update {{ file_bashrc }}
+  ansible.builtin.blockinfile:
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - dotnet"
+    dest: "{{ file_bashrc }}"
+    backup: true
+    block: |
+      function _dotnet_bash_complete()
+      {
+        local cur="${COMP_WORDS[COMP_CWORD]}" IFS=$'\n' # On Windows you may need to use use IFS=$'\r\n'
+        local candidates
+
+        read -d '' -ra candidates < <(dotnet complete --position "${COMP_POINT}" "${COMP_LINE}" 2>/dev/null)
+
+        read -d '' -ra COMPREPLY < <(compgen -W "${candidates[*]:-}" -- "$cur")
+      }
+
+      complete -f -F _dotnet_bash_complete dotnet
+    prepend_newline: true
+    state: present
