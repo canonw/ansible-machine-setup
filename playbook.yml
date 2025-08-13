@@ -14,3 +14,5 @@
         - debug_info
 
   roles:
+    - role: macos
+      when: is_mac

@@ -4,6 +4,10 @@ Setup local computer configuration
 
 1. Various command line
 
+It supports the following OS
+
+1. OSX (ARM)
+
 To confirm ansible setup correctly, execute
 
 ``` sh
