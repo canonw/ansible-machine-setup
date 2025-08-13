@@ -39,6 +39,8 @@
     - bash
     - zsh
 
+    - dotnet
+
     - git
 
     - fzf

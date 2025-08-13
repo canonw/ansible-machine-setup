@@ -1,0 +1,6 @@
+# code: language=ansible
+---
+# Checkout https://www.nuget.org/packages?packagetype=dotnettool for tools
+dotnet_global_install:
+  - { name: "dotnet-outdated-tool" }
+  - { name: "dotnet-reportgenerator-globaltool" }
