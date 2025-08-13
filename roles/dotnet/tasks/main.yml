@@ -1,0 +1,88 @@
+# code: language=ansible
+---
+# TODO: WSL2 support installation to support multiple versions of .NET
+- name: Setup {{ app }}
+  vars:
+    app: "dotnet"
+
+  block:
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail # <-- adding this will prevent surprises
+          figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: dotnet_block_header_result
+      changed_when: dotnet_block_header_result.rc != 0
+
+    # Reference: https://learn.microsoft.com/en-us/dotnet/core/tools/enable-tab-autocomplete
+    - name: Update {{ file_zshrc }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          {{ dotnet_block_header_result.stdout }}
+          export PATH="$PATH:$HOME/.dotnet/tools"
+
+          _dotnet_zsh_complete()
+          {
+            local completions=("$(dotnet complete "$words")")
+
+            # If the completion list is empty, just continue with filename selection
+            if [ -z "$completions" ]
+            then
+              _arguments '*::arguments: _normal'
+              return
+            fi
+
+            # This is not a variable assignment, don't remove spaces!
+            _values = "${(ps:\n:)completions}"
+          }
+
+          compdef _dotnet_zsh_complete dotnet
+        prepend_newline: true
+
+    - name: Update {{ file_bashrc }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          {{ dotnet_block_header_result.stdout }}
+          export PATH="$PATH:$HOME/.dotnet/tools"
+
+          function _dotnet_bash_complete()
+          {
+            local cur="${COMP_WORDS[COMP_CWORD]}" IFS=$'\n' # On Windows you may need to use use IFS=$'\r\n'
+            local candidates
+
+            read -d '' -ra candidates < <(dotnet complete --position "${COMP_POINT}" "${COMP_LINE}" 2>/dev/null)
+
+            read -d '' -ra COMPREPLY < <(compgen -W "${candidates[*]:-}" -- "$cur")
+          }
+
+          complete -f -F _dotnet_bash_complete dotnet
+        prepend_newline: true
+
+    - name: Install node applications using {{ app }}
+      ansible.builtin.command:
+        cmd: dotnet tool install {{ item.name }} --global
+      args:
+        chdir: "{{ ansible_env.HOME }}"
+      environment:
+        path: "{{ ansible_env.HOME }}/.dotnet/tools:{{ ansible_env.PATH }}"
+      register: dotnet_global_output
+      changed_when:
+        - "'was successfully installed' in dotnet_global_output.stdout"
+        - dotnet_global_output.rc == 0
+      loop: "{{ dotnet_global_install }}"
+
+    - name: Debug dotnet_global_output
+      ansible.builtin.debug:
+        var: "dotnet_global_output"
+      tags:
+        - never
+        - debug_info
