@@ -1,0 +1,114 @@
+# code: language=ansible
+---
+# https://docs.volta.sh/guide/
+- name: Setup {{ app }}
+  vars:
+    app: "volta"
+    app_basepath:
+      Ubuntu: $HOME/.volta/bin/
+    scripts:
+      headers: "{{ volta_block_header_result.stdout }}"
+      bashrc:
+        Ubuntu: |
+          export VOLTA_HOME="$HOME/.volta"
+          export PATH="$VOLTA_HOME/bin:$PATH"
+
+          test -f "$(command -v volta)" && eval "$(volta completions bash)"
+      zshrc:
+        Ubuntu: |
+          export VOLTA_HOME="$HOME/.volta"
+          export PATH="$VOLTA_HOME/bin:$PATH"
+
+          test -f "$(command -v volta)" && eval "$(volta completions zsh)"
+    packages: "{{ volta_packages }}"
+  block:
+    - name: Debug vars in {{ app }}
+      vars:
+        msg: |
+          scripts.bashrc[ansible_distribution]: {{ scripts.bashrc[ansible_distribution] }}
+          scripts.zshrc[ansible_distribution]: {{ scripts.zshrc[ansible_distribution] }}
+      ansible.builtin.debug:
+        msg: "{{ (msg.split('\n') | map('trim'))[:-1] }}"
+      tags:
+        - never
+        - debug_info
+
+    - name: Install {{ app }}
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_first_found:
+        - files:
+            - "{{ ansible_distribution }}-{{ ansible_distribution_release }}.yml"
+            - "{{ ansible_distribution }}-{{ ansible_distribution_major_version | int }}.yml"
+            - "{{ ansible_distribution }}.yml"
+            - "{{ ansible_os_family }}.yml"
+            - "default.yml"
+          skip: true
+
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail # <-- adding this will prevent surprises
+          figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: volta_block_header_result
+      changed_when: volta_block_header_result.rc != 0
+
+    - name: Update {{ file_zshrc }}
+      when: scripts.zshrc[ansible_distribution] is defined
+      ansible.builtin.blockinfile:
+        state: "{{ 'absent' if scripts.zshrc[ansible_distribution] is none else 'present' }}"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          {{ scripts.headers }}
+          {{ scripts.zshrc[ansible_distribution] }}
+        prepend_newline: true
+
+    - name: Update {{ file_bashrc }}
+      when: scripts.bashrc[ansible_distribution] is defined
+      ansible.builtin.blockinfile:
+        state: "{{ 'absent' if scripts.bashrc[ansible_distribution] is none else 'present' }}"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          {{ scripts.headers }}
+          {{ scripts.bashrc[ansible_distribution] }}
+        prepend_newline: true
+
+    - name: Update .profile (deprecated)
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ ansible_env.HOME }}/.profile"
+        backup: true
+        block: |
+          {{ volta_block_header_result.stdout }}
+          export VOLTA_HOME="$HOME/.volta"
+          export PATH="$VOLTA_HOME/bin:$PATH"
+        prepend_newline: true
+        state: absent
+      tags:
+        - never # Comment out and not follow volta install scripts.convention
+
+    - name: Install node applications using {{ app }}
+      become: false
+      ansible.builtin.command:
+        # Ubuntu 24.02 needs to specify app_basepath
+        cmd: "{{ app_basepath[ansible_distribution] | default('') }}volta install --verbose {{ item.name }}"
+      args:
+        chdir: "{{ ansible_env.HOME }}"
+      environment:
+        path: "{{ ansible_env.HOME }}/.volta/bin:{{ ansible_env.PATH }}"
+      register: volta_output
+      changed_when:
+        - "'[verbose] Installing ' in volta_output.stderr"
+        - volta_output.rc == 0
+      loop: "{{ packages }}"
+
+    - name: Debug volta_output
+      ansible.builtin.debug:
+        var: "volta_output"
+      tags:
+        - never
+        - debug_info

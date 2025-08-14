@@ -1,0 +1,7 @@
+# code: language=ansible
+---
+volta_packages:
+  - { name: "node" }
+  - { name: "npm" }
+  - { name: "yarn" }
+  # - { name: "typescript" } # use npm
