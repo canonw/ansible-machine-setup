@@ -47,6 +47,7 @@
     - zoxide
 
     - fastfetch
+    - navi
 
     - role: docker
       when: not is_wsl # TODO: test WSL2
