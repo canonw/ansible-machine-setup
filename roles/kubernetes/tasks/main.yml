@@ -1,0 +1,58 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "kubernetes"
+
+  block:
+    # https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/#install-with-homebrew-on-macos
+    - name: Install kubernetes-cli (Mac)
+      community.general.homebrew:
+        name: kubernetes-cli
+        state: present
+      when: is_mac
+
+    # Use Oh My Zsh
+    # - name: Update {{ file_zshrc }}
+    #   ansible.builtin.blockinfile:
+    #     marker: "# {mark} ANSIBLE MANAGED BLOCK - kubectl"
+    #     dest: "{{ file_zshrc }}"
+    #     backup: true
+    #     block: |
+    #       test -f "$(command -v kubectl)" && source <(kubectl completion zsh)
+    #     prepend_newline: true
+    #     state: present
+    #   tags:
+    #     - never
+
+    - name: Configure zsh completion
+      ansible.builtin.shell: |
+        [ -d "$HOME/.oh-my-zsh/custom/plugins/kubectl-autocomplete/" ] || mkdir -p "$HOME/.oh-my-zsh/custom/plugins/kubectl-autocomplete/"
+        kubectl completion zsh > "$HOME/.oh-my-zsh/custom/plugins/kubectl-autocomplete/kubectl-autocomplete.plugin.zsh"
+      register: kubernetes_kubectl_bash_completion_output
+      changed_when: kubernetes_kubectl_bash_completion_output.rc != 0
+      tags:
+        - never # brew includes completion setup
+
+    # TODO: Confirm if completion replaced Oh My Zsh version
+    - name: Configure bash completion
+      ansible.builtin.shell: |
+        mkdir -p $HOME/.local/share/bash-completion/completions && \
+        kubectl completion bash > $HOME/.local/share/bash-completion/completions/kubectl
+      register: kubernetes_kubectl_bash_completion_output
+      changed_when: kubernetes_kubectl_bash_completion_output.rc != 0
+      tags:
+        - never # brew includes completion setup
+
+    - name: Update {{ file_bashrc }}
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - kubectl"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          if [ -x "$(command -v kubectl)" ]; then
+            alias k=kubectl
+            complete -o default -F __start_kubectl k
+          fi
+        prepend_newline: true
+        state: present
