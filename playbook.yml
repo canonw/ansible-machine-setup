@@ -50,6 +50,8 @@
 
     - role: docker
       when: not is_wsl # TODO: test WSL2
+    - role: kubernetes
+      when: not is_wsl # TODO: test WSL2
 
     - role: vscode
       when: not is_wsl
