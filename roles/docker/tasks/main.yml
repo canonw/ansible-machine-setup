@@ -1,0 +1,34 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "docker"
+  block:
+    # Reference https://docs.docker.com/engine/cli/completion/#bash
+    - name: Configure bash completion
+      ansible.builtin.shell: |
+        mkdir -p $HOME/.local/share/bash-completion/completions && \
+        docker completion bash > $HOME/.local/share/bash-completion/completions/docker
+      register: docker_bash_completion_output
+      changed_when: docker_bash_completion_output.rc != 0
+      tags:
+        - never # brew includes completion setup
+
+    # Oh My Sh specific completion
+    # TODO: Move completions to custom?
+    - name: Configure zsh completion
+      ansible.builtin.shell: |
+        mkdir -p $HOME/.oh-my-zsh/completions
+        docker completion zsh > $HOME/.oh-my-zsh/completions/_docker
+      register: docker_bash_completion_output
+      changed_when: docker_bash_completion_output.rc != 0
+      tags:
+        - never # brew includes completion setup in Oh My Shell
+
+    # A tool for exploring a Docker image, layer contents, and discovering ways to shrink the size of your Docker/OCI image.
+    # https://github.com/wagoodman/dive
+    - name: Install dive (Mac)
+      community.general.homebrew:
+        name: dive
+        state: present
+      when: is_mac

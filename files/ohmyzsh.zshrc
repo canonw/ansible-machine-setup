@@ -80,6 +80,8 @@ plugins=(
     zsh-you-should-use
 )
 
+plugins+=(docker)
+
 # Note: Extra setup required by zsh-completions
 fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
 autoload -U compinit && compinit
