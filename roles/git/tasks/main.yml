@@ -1,13 +1,26 @@
 # code: language=ansible
 ---
-- name: Define global configuration
-  ansible.builtin.shell: |
-    if [ "$(git config --get '{{ item.name }}')" = "{{ item.value }}" ]; then
-      echo "No Change"
-    else
-      git config --global {{ item.name }} "{{ item.value }}"
-      echo "Set"
-    fi
-  loop: "{{ git_global_configs }}"
-  register: git_global_config_output
-  changed_when: "'Set' in git_global_config_output.stdout"
+- name: Setup {{ app }}
+  vars:
+    app: "git"
+  block:
+    - name: "Install {{ app }}"
+      when: not is_mac # Handle MacOSX in brew bundle
+      become: true
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - {name: "git"}
+
+    - name: Configure global git settings
+      ansible.builtin.shell: |
+        if [ "$(git config --get '{{ item.name }}')" = "{{ item.value }}" ]; then
+          echo "No Change"
+        else
+          git config --global {{ item.name }} "{{ item.value }}"
+          echo "Set"
+        fi
+      loop: "{{ git_global_configs }}"
+      register: git_global_config_output
+      changed_when: "'Set' in git_global_config_output.stdout"
