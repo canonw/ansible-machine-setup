@@ -10,7 +10,22 @@
       - { name: "user.email", value: "canonw@users.noreply.github.com" }
 
   tasks:
-    - name: Debug all variables in current scope
+    - name: Debug facts
+      vars:
+        msg: |
+            Ansible Distribution: {{ ansible_distribution }}
+            Ansible Dist Version: {{ ansible_distribution_version }}
+            ansible_distribution_release: {{ ansible_distribution_release }}
+            ansible_os_family: {{ ansible_os_family }}
+            ansible_kernel: {{ ansible_kernel }}
+            ansible_user_dir: {{ ansible_user_dir }}
+            Ansible User home: {{ ansible_env.HOME }}
+            ansible_user_shell: {{ ansible_user_shell }}
+      ansible.builtin.debug:
+        msg: "{{ msg.split('\n') }}"
+      tags: debug_info
+
+    - name: Debug host variables
       ansible.builtin.debug:
         var: hostvars[inventory_hostname]
       tags:
