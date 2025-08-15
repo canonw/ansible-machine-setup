@@ -7,5 +7,9 @@ file_zprofile: "{{ ansible_env.HOME }}/.zprofile"
 
 # is_mac: "{{ ansible_os_family == 'Darwin' }}"
 is_mac: "{{ ansible_distribution == 'MacOSX' }}"
+is_ubuntu: "{{ ansible_distribution == 'Ubuntu' }}"
+
+is_wsl: "{{ 'WSL2' in ansible_kernel }}" # Value is based on "6.6.87.2-microsoft-standard-WSL2"
+
 
 my_config_dir: "{{ ansible_env.HOME }}/.kw_config/"
