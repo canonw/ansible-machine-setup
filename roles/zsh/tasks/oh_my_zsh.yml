@@ -23,7 +23,7 @@
 - name: Update Oh My Zsh to .zshrc
   ansible.builtin.blockinfile:
     marker: "# {mark} ANSIBLE MANAGED BLOCK - ohmyzsh"
-    dest: "{{ file_zshrc }}"
+    path: "{{ file_zshrc }}"
     backup: true
     block: "{{ lookup('ansible.builtin.file', 'files/ohmyzsh.zshrc') }}"
     prepend_newline: true
