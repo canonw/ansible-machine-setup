@@ -60,4 +60,5 @@
     - role: volta
       when: not is_wsl # TODO: test WSL2
 
-    - vscode
+    - role: vscode
+      when: not is_wsl
