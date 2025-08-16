@@ -53,7 +53,8 @@
 
     - role: docker
       when: not is_wsl # TODO: test WSL2
-    - kubernetes
+    - role: kubernetes
+      when: not is_wsl # TODO: test WSL2
 
     - dotnet
     - volta
