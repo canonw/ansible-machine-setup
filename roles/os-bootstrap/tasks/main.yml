@@ -13,3 +13,10 @@
           - "default.yml"
         paths: "{{ playbook_dir }}/vars"
         skip: true
+
+  - name: Bootstrap setup
+    ansible.builtin.include_tasks: "{{ item }}"
+    with_first_found:
+      - files:
+          - "{{ ansible_distribution }}.yml"
+        skip: true
