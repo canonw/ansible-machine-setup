@@ -1,0 +1,16 @@
+# code: language=ansible
+---
+- name: Define OS specific variables
+  vars:
+  block:
+    - name: "OS specific vars (will overwrite /vars/main.yml)"
+      ansible.builtin.include_vars: "{{ item }}"
+      with_first_found:
+        - files:
+            - "{{ ansible_distribution }}-{{ ansible_distribution_release }}.yml"
+            - "{{ ansible_distribution }}-{{ ansible_distribution_major_version | int }}.yml"
+            - "{{ ansible_distribution }}.yml"
+            - "{{ ansible_os_family }}.yml"
+            - "default.yml"
+          paths: "{{ playbook_dir }}/vars"
+          skip: true
