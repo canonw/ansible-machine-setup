@@ -1,6 +1,6 @@
 # code: language=ansible
 ---
-file_bash_profile: "{{ ansible_env.HOME }}/.bash_profile"
+# file_bash_profile: "{{ ansible_env.HOME }}/.bash_profile" # Defined in vars path
 file_bashrc: "{{ ansible_env.HOME }}/.bashrc"
 file_zshrc: "{{ ansible_env.HOME }}/.zshrc"
 file_zprofile: "{{ ansible_env.HOME }}/.zprofile"

@@ -1,0 +1,4 @@
+# code: language=ansible
+---
+# Skip using .bash_profile.  Ubuntu has source .bashrc in .profile.
+file_bash_profile: "{{ ansible_env.HOME }}/.profile"

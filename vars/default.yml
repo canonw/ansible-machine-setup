@@ -1,0 +1,4 @@
+# code: language=ansible
+---
+# Fallback variables for OS specific tasks.
+# This file is used when no specific OS variables are found.
