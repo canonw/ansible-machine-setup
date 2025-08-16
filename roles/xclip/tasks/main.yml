@@ -1,0 +1,25 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "xclip"
+    custom_aliases_file: "{{ my_custom_bash_aliases_file }}"
+  block:
+    - name: Install xclip
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: xclip
+        state: present
+
+    - name: Configure {{ custom_aliases_file }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ custom_aliases_file }}"
+        backup: true
+        block: |
+          if [ -x "$(command -v xclip)" ]; then
+            alias pbcopy='xclip -selection clipboard'
+            alias pbpaste='xclip -selection clipboard -o'
+          fi
+        prepend_newline: true
