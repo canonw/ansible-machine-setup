@@ -1,21 +1,56 @@
 # code: language=ansible
 ---
-- name: Update {{ file_zshrc }}
-  ansible.builtin.blockinfile:
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - fastfetch"
-    dest: "{{ file_zshrc }}"
-    backup: true
-    block: |
-      test -f "$(command -v fastfetch)" && fastfetch
-    prepend_newline: true
-    state: present
+# TODO: update to Ubuntu version specific
+- name: Setup PPA repository
+  when: is_ubuntu
+  block:
+    - name: Add PPA repository
+      ansible.builtin.apt_repository:
+        repo: "ppa:zhangsongcui3371/fastfetch"
+        state: present
 
-- name: Update {{ file_bashrc }}
-  ansible.builtin.blockinfile:
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - fastfetch"
-    dest: "{{ file_bashrc }}"
-    backup: true
-    block: |
-      test -f "$(command -v fastfetch)" && fastfetch
-    prepend_newline: true
-    state: present
+- name: Setup {{ app }}
+  vars:
+    app: "fastfetch"
+    bashrc_code_block:
+      MacOSX: |
+        test -f "$(command -v fzf)" && eval "$(fzf --bash)"
+      Ubuntu: |
+        [ -x "$(command -v fzf)" ] && source "/usr/share/doc/fzf/examples/key-bindings.bash"
+    zshrc_code_block:
+      MacOSX: |
+        test -f "$(command -v fzf)" && source <(fzf --zsh)
+      # Reference 'apt show fzf'
+      Ubuntu: |
+        [ -x "$(command -v fzf)" ] && source "/usr/share/doc/fzf/examples/completion.zsh"
+        [ -x "$(command -v fzf)" ] && source "/usr/share/doc/fzf/examples/key-bindings.zsh"
+
+  block:
+    - name: "Install {{ app }}"
+      when: not is_mac # Handle MacOSX in brew bundle
+      become: true
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - {name: "fastfetch"}
+
+    - name: Configure {{ file_zshrc }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          test -f "$(command -v fastfetch)" && fastfetch
+        prepend_newline: true
+
+    - name: Configure {{ file_bashrc }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          test -f "$(command -v fastfetch)" && fastfetch
+        prepend_newline: true
