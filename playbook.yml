@@ -31,6 +31,3 @@
 
   roles:
     - role: os-bootstrap
-
-    - role: macos
-      when: is_mac

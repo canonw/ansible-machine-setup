@@ -1,0 +1,15 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "MacOSX"
+
+  block:
+    - name: Run brew bundle to install dependencies
+      ansible.builtin.shell: |
+        /opt/homebrew/bin/brew bundle
+      args:
+        chdir: "files" # Optional: if Brewfile is not in default location
+      register: macos_brew_bundle_output
+      changed_when: "'complete!' in macos_brew_bundle_output.stdout"
+      become: "{{ ansible_pkg_mgr != 'homebrew' }}"
