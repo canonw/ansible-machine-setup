@@ -40,7 +40,10 @@
     - zsh
 
     - dotnet
-    - role: volta
+    - role: rust
+      when: not is_mac # not test
+
+    - volta
 
     - git
 
