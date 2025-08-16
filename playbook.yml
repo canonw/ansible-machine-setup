@@ -39,6 +39,8 @@
     - bash
     - zsh
 
+    - rust
+
     - git
 
     - fzf

@@ -1,0 +1,39 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  when: not is_mac # MacOSX has yet to need it
+  vars:
+    app: "rust"
+
+  block:
+    - name: "Install {{ app }}"
+      become: true
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - {name: "rustc", state: "present"}
+        - {name: "cargo", state: "present"}
+
+    - name: Configure {{ file_zshrc }}
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          PATH=$PATH:$HOME/.cargo/bin
+
+          test -f "$(command -v zoxide)" && eval "$(zoxide init bash)"
+        prepend_newline: true
+        state: present
+
+    - name: Configure {{ file_bashrc }}
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          PATH=$PATH:$HOME/.cargo/bin
+        prepend_newline: true
+        state: present
+
