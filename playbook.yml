@@ -47,6 +47,8 @@
 
     - git
 
+    - role: xclip
+      when: not is_mac # Ubuntu tool
     - fzf
     - zoxide
 

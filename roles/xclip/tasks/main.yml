@@ -1,0 +1,45 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "xclip"
+    files:
+      aliases:
+        - { name: "{{ my_custom_bash_aliases_file }}" }
+        - { name: "{{ my_custom_zsh_aliases_file }}" }
+    scripts:
+      headers: "{{ xclip_block_header_result.stdout }}"
+      aliases: |
+        if [ -x "$(command -v xclip)" ]; then
+          alias pbcopy='xclip -selection clipboard'
+          alias pbpaste='xclip -selection clipboard -o'
+        fi
+  block:
+    - name: Install xclip
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: xclip
+        state: present
+
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: xclip_block_header_result
+      changed_when: xclip_block_header_result.rc != 0
+
+    - name: Configure aliases
+      ansible.builtin.blockinfile:
+        state: "{{ file_item.state | default(omit) }}"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_item.name }}"
+        backup: true
+        block: |
+          {{ scripts.headers }}
+          {{ scripts.aliases }}
+        prepend_newline: true
+      loop: "{{ files.aliases }}"
+      loop_control:
+        loop_var: file_item
