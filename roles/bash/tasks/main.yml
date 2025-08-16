@@ -27,20 +27,6 @@
       access_time: preserve
     loop: "{{ config_files }}"
 
-  # Reference https://github.com/scop/bash-completion/blob/main/README.md#macos-os-x
-  - name: Configure {{ file_bash_profile }}
-    ansible.builtin.blockinfile:
-      state: present
-      marker: "# {mark} ANSIBLE MANAGED BLOCK - macos"
-      dest: "{{ file_bash_profile }}"
-      backup: true
-      block: |
-        # Required by Mac and by WSL due to Login Shell Behavior
-        if [[ -f "$HOME/.bashrc" ]]; then
-          source "$HOME/.bashrc"
-        fi
-      prepend_newline: true
-
 - name: Setup aliases
   vars:
     app: "bash_aliases"
