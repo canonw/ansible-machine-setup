@@ -45,6 +45,8 @@
 
     - git
 
+    - role: os-xclip
+      when: not is_mac
     - fzf
     - zoxide
 
