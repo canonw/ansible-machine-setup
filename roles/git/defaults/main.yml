@@ -1,5 +1,6 @@
 # code: language=ansible
 ---
 git_global_configs:
-  - { name: "user.name", value: "TBD" }
-  - { name: "user.email", value: "tbd@email.com" }
+  - { name: "init.defaultBranch", value: "main" }
+  - { name: "core.editor", value: "vim" }
+git_global_configs_ex:

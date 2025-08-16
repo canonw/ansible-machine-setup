@@ -12,15 +12,15 @@
         state: "{{ item.state | default('present') }}"
       with_items:
         - {name: "git"}
+        - {name: "git-extras"}  # TODO: Add script
+        - {name: "git-flow"}
+      tags:
+        - never
 
-    - name: Configure global git settings
-      ansible.builtin.shell: |
-        if [ "$(git config --get '{{ item.name }}')" = "{{ item.value }}" ]; then
-          echo "No Change"
-        else
-          git config --global {{ item.name }} "{{ item.value }}"
-          echo "Set"
-        fi
-      loop: "{{ git_global_configs }}"
-      register: git_global_config_output
-      changed_when: "'Set' in git_global_config_output.stdout"
+    - name: Configure global git configs
+      git_config:
+          name: "{{ item.name }}"
+          scope: global
+          state: "{{ item.state | default('present') }}"
+          value: "{{ item.value }}"
+      loop: "{{ git_global_configs + git_global_configs_ex }}"

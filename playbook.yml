@@ -5,7 +5,7 @@
 
   vars:
     # Define git repository user
-    git_global_configs:
+    git_global_configs_ex:
       - { name: "user.name", value: "Ken Wong" }
       - { name: "user.email", value: "canonw@users.noreply.github.com" }
 
