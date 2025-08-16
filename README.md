@@ -10,6 +10,10 @@ It supports the following OS
 
 1. OSX (ARM)
 
+TODO: Add Ubuntu
+https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html#installing-ansible-on-ubuntu
+
+
 To confirm ansible setup correctly, execute
 
 ``` sh
