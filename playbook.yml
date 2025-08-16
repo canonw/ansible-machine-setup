@@ -57,6 +57,7 @@
       when: not is_wsl # TODO: test WSL2
 
     - dotnet
-    - volta
+    - role: volta
+      when: not is_wsl # TODO: test WSL2
 
     - vscode

@@ -1,43 +1,46 @@
 # code: language=ansible
 ---
 # https://docs.volta.sh/guide/
-- name: Update {{ file_zshrc }}
-  ansible.builtin.blockinfile:
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - volta"
-    dest: "{{ file_zshrc }}"
-    backup: true
-    block: |
-      test -f "$(command -v volta)" && eval "$(volta completions zsh)"
-    prepend_newline: true
-    state: present
-  tags:
-    - never # brew includes completion setup
+- name: Setup {{ app }}
+  vars:
+    app: "volta"
+  block:
+    - name: Update {{ file_zshrc }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          test -f "$(command -v volta)" && eval "$(volta completions zsh)"
+        prepend_newline: true
+      tags:
+        - never # brew includes completion setup
 
-- name: Update {{ file_bashrc }}
-  ansible.builtin.blockinfile:
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - volta"
-    dest: "{{ file_bashrc }}"
-    backup: true
-    block: |
-      test -f "$(command -v volta)" && eval "$(volta completions bash)"
-    prepend_newline: true
-    state: present
-  tags:
-    - never # brew includes completion setup
+    - name: Update {{ file_bashrc }}
+      ansible.builtin.blockinfile:
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          test -f "$(command -v volta)" && eval "$(volta completions bash)"
+        prepend_newline: true
+        state: present
+      tags:
+        - never # brew includes completion setup
 
-- name: Install applications
-  ansible.builtin.command:
-    cmd: volta install --verbose {{ item.name }}
-  register: volta_output
-  changed_when:
-    - "'[verbose] Installing ' in volta_output.stderr"
-    - volta_output.rc == 0
-  loop: "{{ volta_install }}"
+    - name: Install {{ app }}
+      ansible.builtin.command:
+        cmd: volta install --verbose {{ item.name }}
+      register: volta_output
+      changed_when:
+        - "'[verbose] Installing ' in volta_output.stderr"
+        - volta_output.rc == 0
+      loop: "{{ volta_install }}"
 
-- name: Debug volta_output
-  ansible.builtin.debug:
-    # msg: "{{ volta_output.stdout }}"
-    var: "volta_output"
-  tags:
-    - never
-    - debug_info
+    - name: Debug volta_output
+      ansible.builtin.debug:
+        var: "volta_output"
+      tags:
+        - never
+        - debug_info
