@@ -1,0 +1,46 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "Ubuntu"
+    packages:
+      - {name: "ansible"}
+      - {name: "apt-transport-https"}
+      - {name: "curl"}
+      - {name: "git"}
+      - {name: "python3"}
+      - {name: "python3-pip"}
+      - {name: "unzip"}
+      # common packages
+      - {name: "awscli"}  # TODO: Add script
+      - {name: "boxes"}
+      - {name: "exa", state: "absent"}  # Replaced by lsd
+      - {name: "exiftool"}
+      - {name: "figlet"}
+      - {name: "gh"}
+      - {name: "jq"}
+      - {name: "neovim"}
+      - {name: "net-tools"}
+      - {name: "ripgrep"}
+      - {name: "shellcheck"}
+      - {name: "tree"}
+      - {name: "libxml2-utils"}  # Use xmllint
+  block:
+    - name: Install aptitude (deprecated)
+      become: true
+      ansible.builtin.apt:
+        pkg:
+          - aptitude
+        state: latest
+        update_cache: true
+      tags:
+        - never # Prefer command line update instead
+
+    - name: Install packages
+      become: true
+      ansible.builtin.package:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default('present') }}"
+      loop: "{{ packages }}"
+      loop_control:
+        loop_var: package_item

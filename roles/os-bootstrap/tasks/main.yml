@@ -1,7 +1,6 @@
 # code: language=ansible
 ---
 - name: Define OS specific variables
-  vars:
   block:
     - name: "OS specific vars (will overwrite /vars/main.yml)"
       ansible.builtin.include_vars: "{{ item }}"
@@ -13,4 +12,11 @@
             - "{{ ansible_os_family }}.yml"
             - "default.yml"
           paths: "{{ playbook_dir }}/vars"
+          skip: true
+
+    - name: Bootstrap setup
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_first_found:
+        - files:
+            - "{{ ansible_distribution }}.yml"
           skip: true
