@@ -62,3 +62,5 @@
 
     - role: vscode
       when: not is_wsl
+
+    - aws
