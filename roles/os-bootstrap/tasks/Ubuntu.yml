@@ -12,7 +12,6 @@
       - {name: "python3-pip"}
       - {name: "unzip"}
       # common packages
-      - {name: "awscli"}  # TODO: Add script
       - {name: "boxes"}
       - {name: "exa", state: "absent"}  # Replaced by lsd
       - {name: "exiftool"}

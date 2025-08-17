@@ -1,0 +1,17 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "awscli"
+
+  block:
+    - name: "Install custom setup for {{ ansible_os_family }}"
+      become: true
+      community.general.snap:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default('present') }}"
+        classic: "{{ package_item.classic | default(omit) }}"
+      loop:
+        - { name: "aws-cli", classic: true }
+      loop_control:
+        loop_var: package_item
