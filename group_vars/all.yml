@@ -16,3 +16,7 @@ my_config_subpath: "/.kw_config"
 my_config_dir: "$HOME{{ my_config_subpath }}/"
 my_custom_bash_aliases_file: "$HOME{{ my_config_subpath }}/.bash_aliases"
 my_custom_zsh_aliases_file: "$HOME{{ my_config_subpath }}/.zsh_aliases"
+
+# Use in script header generation
+figlet_font: slant
+boxes_design: pound-cmt
