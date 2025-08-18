@@ -25,6 +25,8 @@
       - {name: "shellcheck"}
       - {name: "tree"}
       - {name: "libxml2-utils"}  # Use xmllint
+    pip3_items:
+      - {name: "ansible-lint"}  # apt version is badly outdated
   block:
     - name: Install aptitude (deprecated)
       become: true
@@ -41,6 +43,15 @@
       ansible.builtin.package:
         name: "{{ package_item.name }}"
         state: "{{ package_item.state | default('present') }}"
-      loop: "{{ packages }}"
+      loop: "{{ packages | default([]) }}"
+      loop_control:
+        loop_var: package_item
+
+    - name: Install pip within a user home directory
+      ansible.builtin.pip:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default('present') }}"
+        extra_args: --user
+      loop: "{{ pip3_items | default([]) }}"
       loop_control:
         loop_var: package_item
