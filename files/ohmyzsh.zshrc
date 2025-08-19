@@ -81,6 +81,7 @@ plugins=(
 )
 
 plugins+=(docker kubectl)
+plugins+=(direnv)
 
 # Note: Extra setup required by zsh-completions
 fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
