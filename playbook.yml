@@ -37,6 +37,8 @@
     - role: os-bootstrap
 
     - bash
+    - role: powershell
+      when: not is_ubuntu # need manual download
     - zsh
 
     - dotnet
