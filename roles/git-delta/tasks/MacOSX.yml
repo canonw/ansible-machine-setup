@@ -1,0 +1,15 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "git-delta"
+  block:
+    - name: Install {{ app }}
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default('present') }}"
+      loop:
+        - { name: "git-delta" }
+      loop_control:
+        loop_var: package_item

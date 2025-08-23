@@ -1,0 +1,23 @@
+# code: language=ansible
+---
+# https://dandavison.github.io/delta/
+- name: Setup {{ app }}
+  when: not is_mac or not is_ubuntu # MacOS needs testing.  Ubuntu needs 24.04
+  vars:
+    app: "git-delta"
+
+  block:
+    - name: Install {{ app }}
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_first_found:
+        - files:
+            - "{{ ansible_distribution }}.yml"
+          skip: true
+
+    - name: Configure global git settings
+      community.general.git_config:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        scope: global
+        state: "{{ item.state | default('present') }}"
+      loop: "{{ git_delta_global_configs }}"
