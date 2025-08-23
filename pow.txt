@@ -1,0 +1,18 @@
+Update font
+
+WSL windows size
+# Setup WSL
+Change size to fit fastfetch
+Windows Size
+- 120
+- 33
+
+-----
+
+ROLE_NAME="powershell"
+mkdir -p roles/$ROLE_NAME/tasks
+echo "# code: language=ansible
+---" > roles/$ROLE_NAME/tasks/main.yml
+---
+Ubuntu Install powershell
+https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.5
