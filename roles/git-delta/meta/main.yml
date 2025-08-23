@@ -1,0 +1,6 @@
+# code: language=ansible
+---
+dependencies:
+  - role: git
+  - role: rust
+    when: is_ubuntu

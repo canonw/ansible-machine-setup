@@ -1,0 +1,16 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "git-delta"
+    path: "$HOME/.cargo"
+  block:
+    - name: Install {{ app }}
+      become: false
+      community.general.cargo:
+        name: "{{ package_item.name }}"
+        path: "{{ path | default('present') }}"
+      loop:
+        - {name: "git-delta", state: "present"}
+      loop_control:
+        loop_var: package_item

@@ -1,0 +1,9 @@
+# code: language=ansible
+---
+git_delta_global_configs:
+  - { name: "core.pager", value: "delta" }
+  - { name: "delta.line-numbers", value: "true" }
+  - { name: "delta.navigate", value: "true" }
+  - { name: "delta.side-by-side", value: "true" }
+  - { name: "interactive.diffFilter", value: "delta --color-only" }
+  - { name: "merge.conflictStyle", value: "zdiff3" }
