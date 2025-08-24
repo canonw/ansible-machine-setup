@@ -65,6 +65,7 @@
     - role: kubernetes
       when: not is_wsl # TODO: test WSL2
 
+    - nvim
     - role: vscode
       when: not is_wsl
 
