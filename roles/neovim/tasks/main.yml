@@ -1,0 +1,14 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "neovim"
+
+  block:
+    - name: "Install {{ app }}"
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - { name: "neovim" }
