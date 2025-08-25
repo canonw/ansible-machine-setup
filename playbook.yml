@@ -42,6 +42,7 @@
     - zsh
 
     - dotnet
+    - nodejs
     - role: rust
       when: not is_mac # not test
 

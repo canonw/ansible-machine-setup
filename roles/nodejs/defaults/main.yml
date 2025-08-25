@@ -1,0 +1,9 @@
+# code: language=ansible
+---
+nodejs_global_packages:
+  - { name: "eslint" }
+  # - { name: "gulp-cli" }
+  # - { name: "node-sass" }
+  - { name: "prettier" }
+  - { name: "stylelint" }
+  - { name: "typescript" }
