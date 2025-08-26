@@ -54,7 +54,6 @@
       when: not is_mac # Ubuntu tool
     - fzf
     - role: git-delta
-      when: not is_ubuntu # need 24 or later
     - zoxide
 
     - fastfetch
