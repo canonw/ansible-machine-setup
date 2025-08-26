@@ -6,6 +6,17 @@
     app: "dotnet"
 
   block:
+    - name: Install {{ app }}
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_first_found:
+        - files:
+            - "{{ ansible_distribution }}-{{ ansible_distribution_release }}.yml"
+            - "{{ ansible_distribution }}-{{ ansible_distribution_major_version | int }}.yml"
+            - "{{ ansible_distribution }}.yml"
+            - "{{ ansible_os_family }}.yml"
+            - "default.yml"
+          skip: true
+
     - name: Create file block header
       ansible.builtin.shell:
         cmd: |
@@ -67,7 +78,9 @@
           complete -f -F _dotnet_bash_complete dotnet
         prepend_newline: true
 
-    - name: Install node applications using {{ app }}
+    # TODO: Rework 24.04 install
+    # https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu-install?tabs=dotnet9&pivots=os-linux-ubuntu-2404
+    - name: Install dotnet applications using {{ app }}
       ansible.builtin.command:
         cmd: dotnet tool install {{ item.name }} --global
       args:

@@ -1,0 +1,25 @@
+# code: language=ansible
+---
+- name: Install {{ app }}
+  vars:
+    app: "dotnet"
+    packages: "{{ dotnet_packages }}"
+
+  block:
+    # https://learn.microsoft.com/en-us/dotnet/core/install/linux-ubuntu-decision
+    - name: Setup PPA repository
+      block:
+        - name: Add PPA repository
+          become: true
+          ansible.builtin.apt_repository:
+            repo: "ppa:dotnet/backports"
+            state: present
+
+    - name: Install packages
+      become: true
+      ansible.builtin.package:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default('present') }}"
+      loop: "{{ packages | default([]) }}"
+      loop_control:
+        loop_var: package_item
