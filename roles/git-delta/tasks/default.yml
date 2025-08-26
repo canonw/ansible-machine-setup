@@ -4,7 +4,7 @@
   vars:
     app: "git-delta"
   block:
-    - name: Install {{ app }}
+    - name: "Install specific setup for {{ ansible_os_family }}"
       become: "{{ not is_mac | bool }}"
       ansible.builtin.package:
         name: "{{ package_item.name }}"

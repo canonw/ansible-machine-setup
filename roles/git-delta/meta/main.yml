@@ -2,5 +2,5 @@
 ---
 dependencies:
   - role: git
-  - role: rust
-    when: is_ubuntu
+  # - role: rust # use direct download
+  #   when: is_ubuntu

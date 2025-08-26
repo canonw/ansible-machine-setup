@@ -1,16 +1,54 @@
 # code: language=ansible
 ---
-- name: Setup {{ app }}
+- name: "Install specific setup for {{ ansible_os_family }}"
   vars:
     app: "git-delta"
-    path: "$HOME/.cargo"
+    app_url: "https://github.com/dandavison/delta/releases/download/{{ delta_version }}/git-delta_{{ delta_version }}_amd64.deb"
+    file_name: "git-delta_{{ delta_version }}_amd64.deb"
   block:
-    - name: Install {{ app }}
+    - name: "Install custom setup for {{ ansible_distribution }}"
       become: false
       community.general.cargo:
+        state: "{{ file_item.state | default('present') }}"
         name: "{{ package_item.name }}"
-        path: "{{ path | default('present') }}"
+        path: "{{ cargo_path | default(omit) }}"
+        locked: "{{ package_item.locked | default(omit) }}"
       loop:
-        - {name: "git-delta", state: "present"}
+        - { name: "git-delta", state: "absent", locked: true }
       loop_control:
         loop_var: package_item
+      tags:
+        - never # app version oudated
+
+    - name: Check if app is installed
+      ansible.builtin.command: dpkg-query -W {{ app }}
+      register: delta_check_deb
+      failed_when: delta_check_deb.rc > 1
+      changed_when: delta_check_deb.rc == 1
+
+    - name: Create temporary directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: _{{ app }}
+      register: delta_temp_path
+      when: delta_check_deb.rc == 1
+
+    - name: Download assets
+      ansible.builtin.get_url:
+        url: "{{ app_url }}"
+        dest: "{{ (delta_temp_path.path, file_name) | path_join }}"
+        mode: "0644"
+      when: delta_check_deb.rc == 1
+
+    - name: Install assets
+      ansible.builtin.apt:
+        deb: "{{ (delta_temp_path.path, file_name) | path_join }}"
+      become: true
+      when: delta_check_deb.rc == 1
+
+    - name: Delete temporary directory
+      ansible.builtin.file:
+        path: "{{ delta_temp_path.path }}"
+        state: absent
+      when: delta_check_deb.rc == 1
+

@@ -5,19 +5,25 @@
   when: not is_mac or not is_ubuntu # MacOS needs testing.  Ubuntu needs 24.04
   vars:
     app: "git-delta"
-    file_gitconfig: "delta.gitconfig"
+    file_config: "delta.gitconfig" # custom git config file.
   block:
     - name: Install {{ app }}
       ansible.builtin.include_tasks: "{{ item }}"
       with_first_found:
         - files:
+            - "{{ ansible_distribution }}-{{ ansible_distribution_release }}.yml"
+            - "{{ ansible_distribution }}-{{ ansible_distribution_major_version | int }}.yml"
             - "{{ ansible_distribution }}.yml"
+            - "{{ ansible_os_family }}.yml"
+            - "default.yml"
           skip: true
 
-    - name: Copy git-delta gitconfig file
+    - name: Copy config file
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/roles/git-delta/files/{{ file_gitconfig }}"
+        src: "{{ role_path }}/files/{{ file_config }}"
         dest: "{{ my_config_dir }}"
+        backup: true
+        directory_mode: "755"
         owner: "{{ ansible_user_uid }}"
         group: "{{ ansible_user_gid }}"
         mode: "0644"
@@ -27,6 +33,7 @@
         name: "{{ item.name }}"
         value: "{{ item.value }}"
         scope: global
-        state: "{{ item.state | default('present') }}"
+        state: "{{ item.state | default(omit) }}"
+        add_mode: add
       loop:
-        - { name: "include.path", value: "{{ my_config_dir | replace('$HOME', '~') }}{{ file_gitconfig }}" }
+        - { name: "include.path", value: "{{ my_config_dir | replace('$HOME', '~') }}{{ file_config }}" }
