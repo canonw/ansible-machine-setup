@@ -55,6 +55,7 @@
       when: not is_mac # Ubuntu tool
     - fzf
     - role: git-delta
+    - lsd
     - zoxide
 
     - fastfetch

@@ -1,0 +1,64 @@
+# code: language=ansible
+---
+# https://github.com/lsd-rs/lsd
+- name: Setup {{ app }}
+  vars:
+    app: "lsd"
+    file_config: "config.yaml"
+    path_config: "{{ lookup('env', 'HOME') }}/.config/lsd/"
+    files:
+      aliases:
+        - { name: "{{ my_custom_bash_aliases_file }}" }
+        - { name: "{{ my_custom_zsh_aliases_file }}" }
+    scripts:
+      headers: "{{ lsd_block_header_result.stdout }}"
+      aliases: |
+        # alias ls='lsd'
+        alias ll='lsd -l'
+        alias la='lsd -a'
+        alias lla='lsd -la'
+        alias lt='lsd --tree'
+  block:
+    - name: Install {{ app }}
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default(omit) }}"
+      loop:
+        - { name: "lsd" }
+      loop_control:
+        loop_var: package_item
+
+    # TODO: config files need to be version specific
+    # - name: Copy config file
+    #   ansible.builtin.copy:
+    #     src: "{{ role_path }}/files/{{ file_config }}"
+    #     dest: "{{ path_config }}"
+    #     backup: true
+    #     directory_mode: "755"
+    #     owner: "{{ ansible_user_uid }}"
+    #     group: "{{ ansible_user_gid }}"
+    #     mode: "0644"
+
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: lsd_block_header_result
+      changed_when: lsd_block_header_result.rc != 0
+
+    - name: Configure aliases
+      ansible.builtin.blockinfile:
+        state: "{{ file_item.state | default(omit) }}"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_item.name }}"
+        backup: true
+        block: |
+          {{ scripts.headers }}
+          {{ scripts.aliases }}
+        prepend_newline: true
+      loop: "{{ files.aliases }}"
+      loop_control:
+        loop_var: file_item
