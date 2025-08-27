@@ -1,0 +1,65 @@
+# code: language=ansible
+---
+# https://github.com/lsd-rs/lsd
+- name: Setup {{ app }}
+  vars:
+    app: "lsd"
+    file_config: "config.yaml"
+    path_config: "{{ lookup('env', 'HOME') }}/.config/lsd/"
+    script: |
+      # alias ls='lsd'
+      alias ll='lsd -l'
+      alias la='lsd -a'
+      alias lla='lsd -la'
+      alias lt='lsd --tree'
+  block:
+    - name: Install {{ app }}
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default('present') }}"
+      loop:
+        - { name: "lsd" }
+      loop_control:
+        loop_var: package_item
+
+    - name: Copy config file
+      ansible.builtin.copy:
+        src: "{{ role_path }}/files/{{ file_config }}"
+        dest: "{{ path_config }}"
+        backup: true
+        directory_mode: "755"
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0644"
+
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail # <-- adding this will prevent surprises
+          figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: lsd_block_header_result
+      changed_when: lsd_block_header_result.rc != 0
+
+    - name: Configure {{ file_zshrc }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_zshrc }}"
+        backup: true
+        block: |
+          {{ lsd_block_header_result.stdout }}
+          {{ script }}
+        prepend_newline: true
+
+    - name: Configure {{ file_bashrc }}
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_bashrc }}"
+        backup: true
+        block: |
+          {{ lsd_block_header_result.stdout }}
+          {{ script }}
+        prepend_newline: true
