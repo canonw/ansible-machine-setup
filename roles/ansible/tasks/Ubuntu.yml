@@ -1,0 +1,27 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: 'ansible'
+
+  block:
+    - name: "Install custom setup for {{ ansible_os_family }}"
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default('present') }}"
+      loop:
+        - { name: "ansible" }
+        - { name: "ansible-lint", state: "absent" } # apt version outdated; crashed in vscode.
+      loop_control:
+        loop_var: package_item
+
+    - name: Install using pipx
+      become: false
+      community.general.pipx:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default(omit) }}"
+      loop:
+        - { name: "ansible-lint" }
+      loop_control:
+        loop_var: package_item
