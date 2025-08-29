@@ -1,0 +1,17 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: 'ansible'
+
+  block:
+    - name: "Install specific setup for {{ ansible_os_family }}"
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default('present') }}"
+      loop:
+        - { name: "ansible" }
+        - { name: "ansible-lint" }
+      loop_control:
+        loop_var: package_item
