@@ -50,6 +50,7 @@
 
     - git
 
+    - role: ansible
     - role: direnv
     - role: xclip
       when: not is_mac # Ubuntu tool
