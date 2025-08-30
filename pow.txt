@@ -1,0 +1,32 @@
+Update font
+
+WSL windows size
+# Setup WSL
+Change size to fit fastfetch
+Windows Size
+- 120
+- 33
+
+-----
+sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y
+
+dotnet tool update --all -g
+----
+
+ROLE_NAME="powershell"
+mkdir -p roles/$ROLE_NAME/tasks
+echo "# code: language=ansible
+---" > roles/$ROLE_NAME/tasks/main.yml
+---
+
+Ubuntu Install powershell
+https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.5
+
+---
+LSD tryout theme from thrid part, such as
+https://github.com/catppuccin/lsd
+
+---
+# TODO:
+- Add chezmoi
+- Add gopass
