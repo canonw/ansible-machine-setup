@@ -1,0 +1,53 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "python"
+    packages:
+      MacOSX:
+        - { name: "python@3.13" } # Brewfile uses this package.
+        - { name: "pipx" }
+        - { name: "pyenv" }
+      Ubuntu:
+        - { name: "python3" }
+        - { name: "python3-pip" }
+        - { name: "pipx" }
+    scripts:
+      headers: "{{ python_block_header_result.stdout }}"
+      # Note: Path .local/bin is where pipx installs binaries
+      default: |
+        export PATH="$HOME/.local/bin:$PATH"
+  block:
+    - name: Install {{ app }}
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default(omit) }}"
+      loop: "{{ packages[ansible_distribution | default('default')] }}"
+      loop_control:
+        loop_var: package_item
+
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: python_block_header_result
+      changed_when: python_block_header_result.rc != 0
+
+    - name: Configure shell scripts
+      ansible.builtin.blockinfile:
+        state: present
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_item.name }}"
+        backup: true
+        block: |
+          {{ scripts.headers }}
+          {{ scripts[file_item.shell | default('default')] }}
+        prepend_newline: true
+      loop:
+        - { name: "{{ file_zshrc }}" }
+        - { name: "{{ file_bashrc }}" }
+      loop_control:
+        loop_var: file_item
