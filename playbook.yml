@@ -41,6 +41,8 @@
       when: not is_ubuntu # need manual download
     - zsh
 
+    - role: python
+      when: not is_mac # not test
     - dotnet
     - nodejs
     - role: rust
