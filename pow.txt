@@ -1,0 +1,44 @@
+Update font
+
+WSL windows size
+# Setup WSL
+Change size to fit fastfetch
+Windows Size
+- 120
+- 33
+
+-----
+sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y
+
+dotnet tool update --all -g
+----
+
+ROLE_NAME="powershell"
+mkdir -p roles/$ROLE_NAME/tasks
+echo "# code: language=ansible
+---" > roles/$ROLE_NAME/tasks/main.yml
+---
+
+Ubuntu Install powershell
+https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.5
+
+---
+LSD tryout theme from thrid part, such as
+https://github.com/catppuccin/lsd
+
+---
+# TODO:
+- Test GPG
+- Test chezmoi
+---
+- GOPASS
+- Add gopass
+- Add https://gist.github.com/troyfontaine/18c9146295168ee9ca2b30c00bd1b41e
+- Eval SSH https://alexnorell.com/post/set-up-gpg/
+---
+dotnet add nuget path
+https://learn.microsoft.com/en-us/nuget/consume-packages/configuring-nuget-behavior
+mac ~/.nuget/NuGe
+- user
+- system
+- local

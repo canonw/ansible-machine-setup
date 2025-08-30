@@ -1,0 +1,11 @@
+---
+# https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent?platform=mac
+- name: Generate SSH key pair
+  community.crypto.openssh_keypair:
+    state: present
+    path: "{{ ansible_env.HOME }}/.ssh/id_rsa_fooo"
+    type: ed25519
+    size: 512
+    # private_key_format: ssh
+    force: false # Set to true to regenerate if already exists
+    passphrase: "{{ ssh_key_passphrase | default(omit) }}" # Optional passphrase

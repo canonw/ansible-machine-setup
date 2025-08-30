@@ -4,6 +4,7 @@
   when: not is_mac # MacOSX has yet to need it
   vars:
     app: "rust"
+    path: "$HOME/.cargo"
 
   block:
     - name: "Install {{ app }}"
@@ -15,13 +16,23 @@
         - {name: "rustc", state: "present"}
         - {name: "cargo", state: "present"}
 
+    - name: Ensure cargo directory exists
+      ansible.builtin.file:
+        path: "{{ path }}"
+        state: directory
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0755"
+        modification_time: preserve
+        access_time: preserve
+
     - name: Configure {{ file_zshrc }}
       ansible.builtin.blockinfile:
         marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
         dest: "{{ file_zshrc }}"
         backup: true
         block: |
-          PATH=$PATH:$HOME/.cargo/bin
+          PATH=$PATH:{{ path }}/bin
 
           test -f "$(command -v zoxide)" && eval "$(zoxide init bash)"
         prepend_newline: true
@@ -33,7 +44,6 @@
         dest: "{{ file_bashrc }}"
         backup: true
         block: |
-          PATH=$PATH:$HOME/.cargo/bin
+          PATH=$PATH:{{ path }}/bin
         prepend_newline: true
         state: present
-
