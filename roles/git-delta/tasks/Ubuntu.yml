@@ -6,6 +6,20 @@
     app_url: "https://github.com/dandavison/delta/releases/download/{{ delta_version }}/git-delta_{{ delta_version }}_amd64.deb"
     file_name: "git-delta_{{ delta_version }}_amd64.deb"
   block:
+    - name: "Install custom setup for {{ ansible_distribution }}"
+      become: false
+      community.general.cargo:
+        state: "{{ file_item.state | default('present') }}"
+        name: "{{ package_item.name }}"
+        path: "{{ cargo_path | default(omit) }}"
+        locked: "{{ package_item.locked | default(omit) }}"
+      loop:
+        - { name: "git-delta", state: "absent", locked: true }
+      loop_control:
+        loop_var: package_item
+      tags:
+        - never # app version oudated
+
     - name: Check if app is installed
       ansible.builtin.command: dpkg-query -W {{ app }}
       register: delta_check_deb
