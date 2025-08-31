@@ -57,6 +57,8 @@
       when: not is_mac # Ubuntu tool
     - fzf
     - role: git-delta
+    - role: gopass
+      when: not is_mac # TODO: test macOS
     - role: gnupg
     - lsd
     - zoxide

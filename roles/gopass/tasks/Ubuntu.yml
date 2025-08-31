@@ -1,0 +1,66 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "gopass"
+    packages:
+      - { name: "gopass" }
+      - { name: "gopass-archive-keyring" }
+  block:
+    - name: Download gopass GPG key
+      become: true
+      ansible.builtin.get_url:
+        url: "https://packages.gopass.pw/repos/gopass/gopass-archive-keyring.gpg"
+        dest: "/usr/share/keyrings/gopass-archive-keyring.gpg"
+        mode: "0644"
+
+    - name: Check file
+      ansible.builtin.stat:
+        path: /etc/apt/sources.list.d/gopass.sources
+      register: gopass_sources_list_result
+
+    # # TODO: Add python3-debian
+    # # Note: has many example.  https://gist.github.com/roib20/27fde10af195cee1c1f8ac5f68be7e9b
+    # - name: Add gopass APT repository
+    #   ansible.builtin.deb822_repository:
+    #     state: present
+    #     name: gopass
+    #     types: [deb]
+    #     uris: "https://packages.gopass.pw/repos/gopass"
+    #     signed_by: "/usr/share/keyrings/gopass-archive-keyring.gpg"
+    #     suites: [stable]
+    #     components: [main]
+    #     architectures:
+    #       - all
+    #       - amd64
+    #       - arm64
+    #       - armhf
+    #     enabled: true
+
+    - name: Create source list for gopass APT repository
+      become: true
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          cat << EOF | sudo tee /etc/apt/sources.list.d/gopass.sources
+          Types: deb
+          URIs: https://packages.gopass.pw/repos/gopass
+          Suites: stable
+          Architectures: all amd64 arm64 armhf
+          Components: main
+          Signed-By: /usr/share/keyrings/gopass-archive-keyring.gpg
+          EOF
+          sudo apt update
+        executable: /bin/bash
+      when: not gopass_sources_list_result.stat.exists
+      register: gopass_add_source_result
+      changed_when: gopass_add_source_result.rc == 0
+
+    - name: "Install app"
+      become: "{{ not is_mac | bool }}"
+      ansible.builtin.package:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default(omit) }}"
+      loop: "{{ packages }}"
+      loop_control:
+        loop_var: package_item
