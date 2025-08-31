@@ -1,0 +1,56 @@
+# code: language=ansible
+---
+# https://getclipboard.app
+- name: Setup {{ app }}
+  vars:
+    app: "clipboard_project"
+    scripts:
+      headers: "{{ clipboard_project_block_header_result.stdout }}"
+      bash:
+        Ubuntu: |
+          alias cb='snap run clipboard'
+          export CLIPBOARD_THEME=darkhighcontrast
+        default: |
+          export CLIPBOARD_THEME=darkhighcontrast
+      zsh:
+        Ubuntu: |
+          alias cb='snap run clipboard'
+          export CLIPBOARD_THEME=darkhighcontrast
+        default: |
+          export CLIPBOARD_THEME=darkhighcontrast
+  block:
+    - name: Install {{ app }}
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_first_found:
+        - files:
+            - "{{ ansible_distribution }}-{{ ansible_distribution_release }}.yml"
+            - "{{ ansible_distribution }}-{{ ansible_distribution_major_version | int }}.yml"
+            - "{{ ansible_distribution }}.yml"
+            - "{{ ansible_os_family }}.yml"
+            - "default.yml"
+          skip: true
+
+    - name: Create file block header
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          figlet -f {{ figlet_font }} '{{ app[:14] }}' | boxes -d {{ boxes_design }}
+        executable: /bin/bash
+      register: clipboard_project_block_header_result
+      changed_when: clipboard_project_block_header_result.rc != 0
+
+    - name: Configure shell scripts
+      ansible.builtin.blockinfile:
+        state: "{{ file_item.state | default(omit) }}"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_item.name }}"
+        backup: true
+        block: |
+          {{ scripts.headers }}
+          {{ scripts[file_item.shell][ansible_distribution] | default(scripts[file_item.shell]['default']) }}
+        prepend_newline: true
+      loop:
+        - { name: "{{ file_zshrc }}", shell: "zsh" }
+        - { name: "{{ file_bashrc }}", shell: "bash" }
+      loop_control:
+        loop_var: file_item
