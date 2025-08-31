@@ -1,0 +1,44 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "gopass"
+    # script:
+    #   # default: |
+  block:
+    # https://github.com/gopasspw/gopass
+    - name: Install {{ app }}
+      ansible.builtin.include_tasks: "{{ item }}"
+      with_first_found:
+        - files:
+            - "{{ ansible_distribution }}-{{ ansible_distribution_release }}.yml"
+            - "{{ ansible_distribution }}-{{ ansible_distribution_major_version | int }}.yml"
+            - "{{ ansible_distribution }}.yml"
+            - "{{ ansible_os_family }}.yml"
+            - "default.yml"
+          skip: true
+
+    # - name: Create file block header
+    #   ansible.builtin.shell:
+    #     cmd: |
+    #       set -o pipefail # <-- adding this will prevent surprises
+    #       figlet -f {{ figlet_font }} '{{ app }}' | boxes -d {{ boxes_design }}
+    #     executable: /bin/bash
+    #   register: gopass_block_header_result
+    #   changed_when: gopass_block_header_result.rc != 0
+
+    # - name: Configure shell scripts
+    #   ansible.builtin.blockinfile:
+    #     state: present
+    #     marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+    #     dest: "{{ file_item.name }}"
+    #     backup: true
+    #     block: |
+    #       {{ gopass_block_header_result.stdout }}
+    #       {{ script[file_item.shell | default('default')] }}
+    #     prepend_newline: true
+    #   loop:
+    #     - { name: "{{ file_zshrc }}" }
+    #     - { name: "{{ file_bashrc }}" }
+    #   loop_control:
+    #     loop_var: file_item
