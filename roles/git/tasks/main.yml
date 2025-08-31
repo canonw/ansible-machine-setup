@@ -10,7 +10,9 @@
         name: "{{ item.name }}"
         state: "{{ item.state | default('present') }}"
       with_items:
-        - {name: "git"}
+        - { name: "git" }
+        - { name: "git-extras" }
+        - { name: "git-flow" }
 
     - name: Configure global git settings
       community.general.git_config:
