@@ -60,6 +60,7 @@
     - lsd
     - zoxide
 
+    - role: clipboard_project
     - fastfetch
     - navi
 
