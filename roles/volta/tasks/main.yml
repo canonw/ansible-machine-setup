@@ -6,7 +6,8 @@
     app: "volta"
     app_basepath:
       Ubuntu: $HOME/.volta/bin/
-    script:
+    scripts:
+      headers: "{{ volta_block_header_result.stdout }}"
       bashrc:
         Ubuntu: |
           export VOLTA_HOME="$HOME/.volta"
@@ -24,8 +25,8 @@
     - name: Debug vars in {{ app }}
       vars:
         msg: |
-          script.bashrc[ansible_distribution]: {{ script.bashrc[ansible_distribution] }}
-          script.zshrc[ansible_distribution]: {{ script.zshrc[ansible_distribution] }}
+          scripts.bashrc[ansible_distribution]: {{ scripts.bashrc[ansible_distribution] }}
+          scripts.zshrc[ansible_distribution]: {{ scripts.zshrc[ansible_distribution] }}
       ansible.builtin.debug:
         msg: "{{ (msg.split('\n') | map('trim'))[:-1] }}"
       tags:
@@ -53,27 +54,27 @@
       changed_when: volta_block_header_result.rc != 0
 
     - name: Update {{ file_zshrc }}
-      when: script.zshrc[ansible_distribution] is defined
+      when: scripts.zshrc[ansible_distribution] is defined
       ansible.builtin.blockinfile:
-        state: "{{ 'absent' if script.zshrc[ansible_distribution] is none else 'present' }}"
+        state: "{{ 'absent' if scripts.zshrc[ansible_distribution] is none else 'present' }}"
         marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
         dest: "{{ file_zshrc }}"
         backup: true
         block: |
-          {{ volta_block_header_result.stdout }}
-          {{ script.zshrc[ansible_distribution] }}
+          {{ scripts.headers }}
+          {{ scripts.zshrc[ansible_distribution] }}
         prepend_newline: true
 
     - name: Update {{ file_bashrc }}
-      when: script.bashrc[ansible_distribution] is defined
+      when: scripts.bashrc[ansible_distribution] is defined
       ansible.builtin.blockinfile:
-        state: "{{ 'absent' if script.bashrc[ansible_distribution] is none else 'present' }}"
+        state: "{{ 'absent' if scripts.bashrc[ansible_distribution] is none else 'present' }}"
         marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
         dest: "{{ file_bashrc }}"
         backup: true
         block: |
-          {{ volta_block_header_result.stdout }}
-          {{ script.bashrc[ansible_distribution] }}
+          {{ scripts.headers }}
+          {{ scripts.bashrc[ansible_distribution] }}
         prepend_newline: true
 
     - name: Update .profile (deprecated)
@@ -88,7 +89,7 @@
         prepend_newline: true
         state: absent
       tags:
-        - never # Comment out and not follow volta install script convention
+        - never # Comment out and not follow volta install scripts.convention
 
     - name: Install node applications using {{ app }}
       become: false

@@ -9,6 +9,7 @@
       become: false
       ansible.builtin.shell:
         cmd: |
+          set -o pipefail
           curl https://get.volta.sh | bash -s -- --skip-setup
       args:
         creates: "{{ ansible_env.HOME }}/.volta/bin/volta" # Prevents re-running if Volta is already installed
