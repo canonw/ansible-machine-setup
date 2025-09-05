@@ -47,6 +47,7 @@
       changed_when: gnupg_block_header_result.rc != 0
 
     - name: Configure shell scripts
+      when: scripts[ansible_distribution] is defined
       ansible.builtin.blockinfile:
         state: present
         marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
@@ -74,18 +75,6 @@
         mode: "0600"
         backup: true
 
-    # - name: Configure gpg agent (Mac)
-    #   when: is_mac
-    #   become: false
-    #   ansible.builtin.lineinfile:
-    #     path: "{{ (config_path, 'gpg-agent.conf') | path_join }}"
-    #     line: "pinentry-program {{ (ansible_env.HOMEBREW_PREFIX, 'bin', 'pinentry-mac') | path_join }}"
-    #     create: true
-    #     owner: "{{ ansible_user_uid }}"
-    #     group: "{{ ansible_user_gid }}"
-    #     mode: "0600"
-    #     backup: true
-
     - name: Configure gpg agent (Mac)
       when: is_mac
       ansible.builtin.blockinfile:
@@ -98,6 +87,33 @@
         block: |
           {{ scripts.headers }}
           pinentry-program {{ (ansible_env.HOMEBREW_PREFIX, 'bin', 'pinentry-mac') | path_join }}
+        prepend_newline: true
+      loop:
+        - { name: "{{ (config_path, 'gpg-agent.conf') | path_join }}" }
+      loop_control:
+        loop_var: file_item
+
+    - name: Create symbolic link to host gpg.exe (WSL2)
+      when: is_wsl
+      become: true
+      ansible.builtin.file:
+        src: "/mnt/c/Program Files (x86)/GnuPG/bin/gpg.exe"
+        dest: "/usr/local/bin/gpg"
+        mode: "555"
+        state: link
+
+    - name: Configure gpg agent to host (WSL2)
+      when: is_wsl
+      ansible.builtin.blockinfile:
+        state: "{{ file_item.state | default(omit) }}"
+        create: true
+        mode: "600"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
+        dest: "{{ file_item.name }}"
+        backup: true
+        block: |
+          {{ scripts.headers }}
+          pinentry-program "/mnt/c/Program Files (x86)/GnuPG/bin/pinentry-basic.exe"
         prepend_newline: true
       loop:
         - { name: "{{ (config_path, 'gpg-agent.conf') | path_join }}" }
