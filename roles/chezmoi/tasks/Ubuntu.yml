@@ -1,0 +1,28 @@
+# code: language=ansible
+---
+- name: Setup {{ app }}
+  vars:
+    app: "chezmoi"
+    bash_completions_local_dir: "{{ ansible_env.HOME }}/.local/share/bash-completion/completions"
+    completions_file: "{{ (bash_completions_local_dir, 'chezmoi') | path_join }}"
+    packages:
+      - { name: "chezmoi", classic: true }
+  block:
+    - name: "Install custom setup for {{ ansible_distribution }}"
+      become: true
+      community.general.snap:
+        name: "{{ package_item.name }}"
+        state: "{{ package_item.state | default(omit) }}"
+        classic: "{{ package_item.classic | default(omit) }}"
+      loop: "{{ packages }}"
+      loop_control:
+        loop_var: package_item
+
+    - name: Configure local bash completions
+      when: is_ubuntu
+      become: false
+      ansible.builtin.shell:
+        cmd: |
+          snap run chezmoi completion bash > "{{ completions_file}}"
+      args:
+        creates: "{{ completions_file }}" # Prevents re-running if file is already installed

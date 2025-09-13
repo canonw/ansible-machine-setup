@@ -52,6 +52,7 @@
     - git
 
     - role: ansible
+    - role: chezmoi
     - role: direnv
     - role: xclip
       when: not is_mac # Ubuntu tool
