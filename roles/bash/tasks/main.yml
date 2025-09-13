@@ -84,6 +84,7 @@
   vars:
     app: "bash-completion"
     # Snippet reference from https://github.com/scop/bash-completion/
+    bash_completions_local_dir: "{{ ansible_env.HOME }}/.local/share/bash-completion/completions"
     code_block:
       MacOSX: |
         [[ -r "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh" ]] && . "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh"
@@ -109,6 +110,17 @@
           # shellcheck source=/dev/null
           {{ code_block[ansible_distribution] | default('') }}
         prepend_newline: true
+
+    - name: Ensure local bash completions directory exists
+      when: is_ubuntu
+      ansible.builtin.file:
+        path: "{{ bash_completions_local_dir }}"
+        state: directory
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+        mode: "0755"
+        modification_time: preserve
+        access_time: preserve
 
 - name: Setup MacOSX
   block:
