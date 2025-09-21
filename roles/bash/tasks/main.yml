@@ -68,7 +68,7 @@
         marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ app }}"
         path: "{{ custom_aliases_file }}"
         backup: true
-        block: "{{ lookup('ansible.builtin.file', '{{ playbook_dir }}/files/.bash_aliases') }}"
+        block: "{{ lookup('ansible.builtin.file', playbook_dir ~'/files/.bash_aliases') }}"
         prepend_newline: true
 
     - name: Configure custom alias file to .bashrc
